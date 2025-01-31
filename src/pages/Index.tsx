@@ -5,19 +5,24 @@ import MenuSection from "@/components/MenuSection";
 import Cart from "@/components/Cart";
 import { CartProvider, CartContext } from "@/components/CartContext";
 import ProductDialog from "@/components/ProductDialog";
+import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/components/ui/use-toast";
 
 const Index = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("home");
+  const { toast } = useToast();
 
   return (
     <CartProvider>
       <div className="min-h-screen bg-white">
-        <header className="bg-[#075E54] text-white p-4 sticky top-0 z-50">
+        <header className="bg-[#FEF7CD] text-black p-4 sticky top-0 z-50">
           <div className="container mx-auto flex justify-between items-center">
-            <h1 className="text-2xl font-bold">Restaurant Name</h1>
+            <h1 className="text-2xl font-bold">Food Frenzy</h1>
             <CartButton onOpen={() => setIsCartOpen(true)} />
           </div>
         </header>
@@ -27,13 +32,13 @@ const Index = () => {
           <div className="w-full mb-6">
             <div className="grid w-full grid-cols-2 max-w-[200px] mx-auto">
               <button
-                className={`py-2 ${activeTab === "home" ? "border-b-2 border-[#075E54]" : ""}`}
+                className={`py-2 ${activeTab === "home" ? "border-b-2 border-[#FEF7CD]" : ""}`}
                 onClick={() => setActiveTab("home")}
               >
                 Home
               </button>
               <button
-                className={`py-2 ${activeTab === "search" ? "border-b-2 border-[#075E54]" : ""}`}
+                className={`py-2 ${activeTab === "search" ? "border-b-2 border-[#FEF7CD]" : ""}`}
                 onClick={() => setActiveTab("search")}
               >
                 Search
