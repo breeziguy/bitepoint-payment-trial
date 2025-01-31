@@ -68,7 +68,7 @@ const Cart = ({ open, onClose }: CartProps) => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
       currency: 'NGN'
-    }).format(price * 1000);
+    }).format(price);
   };
 
   const handleCheckout = async () => {
