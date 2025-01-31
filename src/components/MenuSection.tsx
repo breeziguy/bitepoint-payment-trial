@@ -16,7 +16,8 @@ const MenuSection = ({ onAddToCart, category, featured }: MenuSectionProps) => {
       let query = supabase
         .from('menu_items')
         .select('*')
-        .eq('is_available', true);
+        .eq('is_available', true)
+        .neq('category', 'addon'); // Filter out addons
       
       if (category) {
         query = query.eq('category', category);
@@ -84,7 +85,7 @@ const MenuSection = ({ onAddToCart, category, featured }: MenuSectionProps) => {
               <div 
                 className="p-2 rounded-full bg-white shadow-md hover:shadow-lg transition-shadow"
                 onClick={(e) => {
-                  e.stopPropagation(); // Prevent triggering parent onClick
+                  e.stopPropagation();
                   onAddToCart(item);
                 }}
               >
