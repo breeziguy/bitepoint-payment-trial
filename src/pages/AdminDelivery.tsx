@@ -37,7 +37,7 @@ export default function AdminDelivery() {
       const { data, error } = await supabase
         .from("store_settings")
         .select("*")
-        .single();
+        .maybeSingle();
       if (error && error.code !== "PGRST116") throw error;
       return data;
     },
