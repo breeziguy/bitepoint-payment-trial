@@ -218,13 +218,23 @@ ${trackingUrl}`;
                   {items.map((item) => (
                     <div
                       key={item.id}
-                      className="flex justify-between items-center border-b pb-4"
+                      className="flex justify-between items-start border-b pb-4"
                     >
-                      <div>
+                      <div className="space-y-1">
                         <h3 className="font-medium">{item.name}</h3>
                         <p className="text-sm text-gray-500">
                           {formatPrice(item.price)} x {item.quantity}
                         </p>
+                        {item.addons && item.addons.length > 0 && (
+                          <div className="text-sm text-gray-500">
+                            <p className="font-medium">Add-ons:</p>
+                            {item.addons.map((addon) => (
+                              <p key={addon.id}>
+                                + {addon.name} ({formatPrice(addon.price)})
+                              </p>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <Button
                         variant="ghost"

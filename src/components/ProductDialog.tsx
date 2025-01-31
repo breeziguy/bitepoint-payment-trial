@@ -58,7 +58,7 @@ const ProductDialog = ({ product, isOpen, onClose }: ProductDialogProps) => {
     if (addons) {
       addons.forEach(addon => {
         if (selectedAddons.includes(addon.id)) {
-          total += addon.price;
+          total += addon.price * quantity; // Multiply addon price by quantity
         }
       });
     }
@@ -68,19 +68,23 @@ const ProductDialog = ({ product, isOpen, onClose }: ProductDialogProps) => {
   const handleAdd = () => {
     const selectedAddonItems = addons?.filter(addon => 
       selectedAddons.includes(addon.id)
-    ) || [];
+    ).map(addon => ({
+      id: addon.id,
+      name: addon.name,
+      price: addon.price
+    })) || [];
 
     addToCart({
       id: product.id,
       name: product.name,
       price: product.price,
       quantity: quantity,
-      addons: selectedAddonItems.map(addon => ({
-        id: addon.id,
-        name: addon.name,
-        price: addon.price
-      }))
+      description: product.description,
+      category: product.category,
+      image: product.image_url,
+      addons: selectedAddonItems
     });
+    
     onClose();
     setQuantity(1);
     setSelectedAddons([]);
