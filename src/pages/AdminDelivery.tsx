@@ -80,13 +80,19 @@ export default function AdminDelivery() {
       if (storeSettings?.id) {
         const { error } = await supabase
           .from("store_settings")
-          .update(settings)
+          .update({
+            ...settings,
+            whatsapp_number: storeSettings.whatsapp_number || "+2348000000000" // Preserve existing WhatsApp number
+          })
           .eq("id", storeSettings.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("store_settings")
-          .insert([settings]);
+          .insert([{
+            ...settings,
+            whatsapp_number: "+2348000000000" // Default WhatsApp number for new settings
+          }]);
         if (error) throw error;
       }
     },

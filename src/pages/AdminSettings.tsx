@@ -17,8 +17,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import StoreContactSettings from "@/components/admin/StoreContactSettings";
 
-// ... keep existing code (imports and type definitions)
-
 export default function AdminSettings() {
   const [newZone, setNewZone] = useState({ name: "", price: "" });
   const { toast } = useToast();
@@ -37,7 +35,6 @@ export default function AdminSettings() {
         throw error;
       }
       
-      // If no data exists, create a new store settings record
       if (!data) {
         const { data: newSettings, error: insertError } = await supabase
           .from("store_settings")
@@ -49,7 +46,8 @@ export default function AdminSettings() {
             primary_color: "#9b87f5",
             hero_title: "Delicious food, delivered to you",
             hero_subtitle: "Order your favorite meals from the best restaurants",
-            hero_text_color: "#000000"
+            hero_text_color: "#000000",
+            whatsapp_number: "+2348000000000" // Add default WhatsApp number
           }])
           .select()
           .single();
@@ -94,7 +92,10 @@ export default function AdminSettings() {
 
       const { error } = await supabase
         .from("store_settings")
-        .update(settings)
+        .update({
+          ...settings,
+          whatsapp_number: storeSettings.whatsapp_number || "+2348000000000" // Preserve existing WhatsApp number
+        })
         .eq("id", storeSettings.id);
 
       if (error) {
@@ -102,7 +103,6 @@ export default function AdminSettings() {
         throw error;
       }
 
-      // Immediately invalidate the query to refresh the data
       await queryClient.invalidateQueries({ queryKey: ["store-settings"] });
     },
     onSuccess: () => {
