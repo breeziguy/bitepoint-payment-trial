@@ -11,6 +11,7 @@ const Index = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("home");
+  const { items, setItems } = useContext(CartContext);
 
   return (
     <CartProvider>
@@ -65,6 +66,8 @@ const Index = () => {
         <Cart 
           open={isCartOpen} 
           onClose={() => setIsCartOpen(false)}
+          items={items}
+          setItems={setItems}
         />
 
         {selectedProduct && (
