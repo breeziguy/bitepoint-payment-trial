@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { X } from "lucide-react";
+import { X, Upload, Image } from "lucide-react";
 
 interface MenuItemFormProps {
   onClose: () => void;
@@ -23,6 +23,7 @@ interface MenuItemFormProps {
 const MenuItemForm = ({ onClose, onSuccess, initialData }: MenuItemFormProps) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
     price: initialData?.price || 0,
@@ -31,14 +32,44 @@ const MenuItemForm = ({ onClose, onSuccess, initialData }: MenuItemFormProps) =>
     image_url: initialData?.image_url || "",
   });
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setImageFile(e.target.files[0]);
+    }
+  };
+
+  const uploadImage = async (file: File) => {
+    const fileExt = file.name.split('.').pop();
+    const filePath = `${crypto.randomUUID()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('menu-images')
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('menu-images')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      let imageUrl = formData.image_url;
+
+      if (imageFile) {
+        imageUrl = await uploadImage(imageFile);
+      }
+
       const data = {
         ...formData,
-        price: Number(formData.price) || 0, // Ensure price is a number
+        price: Number(formData.price) || 0,
+        image_url: imageUrl,
       };
 
       if (initialData?.id) {
@@ -143,15 +174,38 @@ const MenuItemForm = ({ onClose, onSuccess, initialData }: MenuItemFormProps) =>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="image_url">Image URL</Label>
-            <Input
-              id="image_url"
-              value={formData.image_url}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, image_url: e.target.value }))
-              }
-              placeholder="https://example.com/image.jpg"
-            />
+            <Label htmlFor="image">Image</Label>
+            <div className="flex items-center gap-4">
+              {(formData.image_url || imageFile) && (
+                <div className="relative w-20 h-20">
+                  <img
+                    src={imageFile ? URL.createObjectURL(imageFile) : formData.image_url}
+                    alt="Preview"
+                    className="w-full h-full object-cover rounded"
+                  />
+                </div>
+              )}
+              <div className="flex-1">
+                <label className="cursor-pointer">
+                  <div className="flex items-center gap-2 p-2 border border-dashed rounded hover:bg-gray-50">
+                    {imageFile ? (
+                      <Upload className="h-5 w-5 text-gray-500" />
+                    ) : (
+                      <Image className="h-5 w-5 text-gray-500" />
+                    )}
+                    <span className="text-sm text-gray-600">
+                      {imageFile ? "Change image" : "Upload image"}
+                    </span>
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageChange}
+                  />
+                </label>
+              </div>
+            </div>
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
