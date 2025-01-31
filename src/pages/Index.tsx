@@ -38,7 +38,13 @@ const Index = () => {
         .order('name');
       
       if (error) throw error;
-      return data;
+      // Filter out categories that don't have any menu items
+      const { data: menuItems } = await supabase
+        .from('menu_items')
+        .select('category');
+      
+      const activeCategories = new Set(menuItems?.map(item => item.category) || []);
+      return data?.filter(category => activeCategories.has(category.name)) || [];
     },
   });
 
