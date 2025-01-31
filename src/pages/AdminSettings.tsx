@@ -16,6 +16,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import StoreContactSettings from "@/components/admin/StoreContactSettings";
+import BillingSettings from "@/components/admin/BillingSettings";
 
 export default function AdminSettings() {
   const [newZone, setNewZone] = useState({ name: "", price: "" });
@@ -182,30 +183,6 @@ export default function AdminSettings() {
     }
   };
 
-  const renderSkeletonInput = () => (
-    <div className="space-y-2">
-      <Skeleton className="h-4 w-24" />
-      <Skeleton className="h-10 w-full" />
-    </div>
-  );
-
-  if (settingsLoading) {
-    return (
-      <div className="p-8 space-y-8">
-        <Skeleton className="h-8 w-48" />
-        <div className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-2">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="space-y-2">
-                {renderSkeletonInput()}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="p-8 space-y-8">
       <h1 className="text-3xl font-bold">Settings</h1>
@@ -216,6 +193,7 @@ export default function AdminSettings() {
           <TabsTrigger value="delivery">Delivery Settings</TabsTrigger>
           <TabsTrigger value="branding">Branding</TabsTrigger>
           <TabsTrigger value="contact">Contact</TabsTrigger>
+          <TabsTrigger value="billing">Billing</TabsTrigger>
         </TabsList>
 
         <TabsContent value="store" className="space-y-6">
@@ -393,6 +371,10 @@ export default function AdminSettings() {
           ) : (
             <StoreContactSettings storeSettings={storeSettings} />
           )}
+        </TabsContent>
+
+        <TabsContent value="billing" className="space-y-6">
+          <BillingSettings />
         </TabsContent>
       </Tabs>
     </div>
