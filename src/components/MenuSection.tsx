@@ -33,7 +33,7 @@ const MenuSection = ({ onAddToCart, category, featured }: MenuSectionProps) => {
   });
 
   const formatPrice = (price: number) => {
-    return `₦${price.toLocaleString()}`;
+    return `₦${price.toLocaleString('en-NG')}`;
   };
 
   if (isLoading) {
