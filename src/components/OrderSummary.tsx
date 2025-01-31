@@ -23,7 +23,7 @@ const OrderSummary = ({
       <h3 className="font-semibold text-lg">Order Summary</h3>
       <div className="space-y-2">
         <div className="flex justify-between">
-          <span>Items</span>
+          <span>Subtotal (including add-ons)</span>
           <span>{formatPrice(subtotal)}</span>
         </div>
         {deliveryType === "delivery" && (

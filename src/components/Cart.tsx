@@ -43,7 +43,15 @@ const Cart = ({ open, onClose }: CartProps) => {
     },
   });
   
-  const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const calculateItemTotal = (item: CartItem) => {
+    let itemTotal = item.price * item.quantity;
+    if (item.addons) {
+      itemTotal += item.addons.reduce((sum, addon) => sum + (addon.price * item.quantity), 0);
+    }
+    return itemTotal;
+  };
+
+  const subtotal = items.reduce((sum, item) => sum + calculateItemTotal(item), 0);
   const deliveryFee = checkoutForm.deliveryType === "delivery" ? selectedZonePrice : 0;
   const total = subtotal + deliveryFee;
 
@@ -95,7 +103,6 @@ const Cart = ({ open, onClose }: CartProps) => {
     }
 
     try {
-      // Create the order first
       const { data: orderData, error: orderError } = await supabase
         .from("orders")
         .insert([
@@ -112,12 +119,12 @@ const Cart = ({ open, onClose }: CartProps) => {
 
       if (orderError) throw orderError;
 
-      // Create order items
       const orderItems = items.map((item) => ({
         order_id: orderData.id,
         menu_item_id: item.id,
         quantity: item.quantity,
         price_at_time: item.price,
+        notes: item.addons ? `Add-ons: ${item.addons.map(addon => addon.name).join(', ')}` : null,
       }));
 
       const { error: itemsError } = await supabase
@@ -235,6 +242,9 @@ ${trackingUrl}`;
                             ))}
                           </div>
                         )}
+                        <p className="text-sm font-medium">
+                          Item Total: {formatPrice(calculateItemTotal(item))}
+                        </p>
                       </div>
                       <Button
                         variant="ghost"
