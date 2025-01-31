@@ -1,12 +1,9 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
 interface MenuSectionProps {
   onAddToCart: (item: MenuItem) => void;
 }
 
-// Updated menu data with more detailed descriptions
 const menuItems: MenuItem[] = [
   {
     id: "1",
@@ -44,7 +41,7 @@ const menuItems: MenuItem[] = [
 
 const MenuSection = ({ onAddToCart }: MenuSectionProps) => {
   const formatPrice = (price: number) => {
-    return `₦${price.toLocaleString()}`; // Converting to Naira and formatting
+    return `₦${(price * 1000).toLocaleString()}`;
   };
 
   return (

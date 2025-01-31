@@ -1,11 +1,11 @@
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Trash2, MapPin, Truck } from "lucide-react";
 import { useContext, useState } from "react";
 import { CartContext } from "./CartContext";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,7 @@ interface CartProps {
 interface CheckoutForm {
   name: string;
   phone: string;
+  email: string;
   deliveryType: "pickup" | "delivery";
   address?: string;
   roomNumber?: string;
@@ -32,6 +33,7 @@ const Cart = ({ open, onClose }: CartProps) => {
   const [checkoutForm, setCheckoutForm] = useState<CheckoutForm>({
     name: "",
     phone: "",
+    email: "",
     deliveryType: "pickup",
   });
   
@@ -42,7 +44,7 @@ const Cart = ({ open, onClose }: CartProps) => {
   };
 
   const handleCheckout = () => {
-    if (!checkoutForm.name || !checkoutForm.phone) {
+    if (!checkoutForm.name || !checkoutForm.phone || !checkoutForm.email) {
       toast({
         title: "Error",
         description: "Please fill in all required fields",
@@ -60,7 +62,6 @@ const Cart = ({ open, onClose }: CartProps) => {
       return;
     }
 
-    // Format the order message for WhatsApp
     const orderDetails = `
 *New Order*
 ${checkoutForm.deliveryType === "pickup" ? "TAKE15" : "#23"}
@@ -74,26 +75,26 @@ Total: ${formatPrice(total)}
 
 Customer: ${checkoutForm.name}
 Phone: ${checkoutForm.phone}
+Email: ${checkoutForm.email}
 Service: ${checkoutForm.deliveryType}
 ${checkoutForm.deliveryType === "delivery" ? `
 Delivery Address / Room number
 ${checkoutForm.address} ${checkoutForm.roomNumber || ""}` : ""}
     `;
     
-    // Create WhatsApp link with pre-filled message
     const whatsappLink = `https://wa.me/+1234567890?text=${encodeURIComponent(orderDetails)}`;
     window.open(whatsappLink, '_blank');
   };
 
   return (
-    <Sheet open={open} onOpenChange={onClose}>
-      <SheetContent>
-        <SheetHeader>
-          <SheetTitle>Your Cart</SheetTitle>
-        </SheetHeader>
+    <Drawer open={open} onOpenChange={onClose}>
+      <DrawerContent>
+        <DrawerHeader>
+          <DrawerTitle>Your Cart</DrawerTitle>
+        </DrawerHeader>
         
-        <div className="mt-8 flex flex-col h-full">
-          <div className="flex-1 overflow-auto">
+        <div className="p-4">
+          <div className="space-y-4 max-h-[50vh] overflow-y-auto">
             {items.length === 0 ? (
               <p className="text-center text-gray-500">Your cart is empty</p>
             ) : (
@@ -120,7 +121,7 @@ ${checkoutForm.address} ${checkoutForm.roomNumber || ""}` : ""}
           </div>
           
           {items.length > 0 && (
-            <div className="border-t pt-4 mt-4 space-y-4">
+            <div className="space-y-4 mt-4">
               <div className="flex justify-between mb-4">
                 <span className="font-medium">Total</span>
                 <span className="font-medium">{formatPrice(total)}</span>
@@ -146,7 +147,17 @@ ${checkoutForm.address} ${checkoutForm.roomNumber || ""}` : ""}
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Delivery Type</Label>
+                  <Label>Email</Label>
+                  <Input
+                    type="email"
+                    placeholder="Your email"
+                    value={checkoutForm.email}
+                    onChange={(e) => setCheckoutForm(prev => ({ ...prev, email: e.target.value }))}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Service Type</Label>
                   <RadioGroup
                     value={checkoutForm.deliveryType}
                     onValueChange={(value: "pickup" | "delivery") => 
@@ -155,11 +166,17 @@ ${checkoutForm.address} ${checkoutForm.roomNumber || ""}` : ""}
                   >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="pickup" id="pickup" />
-                      <Label htmlFor="pickup">Pickup</Label>
+                      <Label htmlFor="pickup" className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        Pickup
+                      </Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="delivery" id="delivery" />
-                      <Label htmlFor="delivery">Delivery</Label>
+                      <Label htmlFor="delivery" className="flex items-center gap-2">
+                        <Truck className="h-4 w-4" />
+                        Delivery
+                      </Label>
                     </div>
                   </RadioGroup>
                 </div>
@@ -175,9 +192,9 @@ ${checkoutForm.address} ${checkoutForm.roomNumber || ""}` : ""}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Room Number</Label>
+                      <Label>Room Number (Optional)</Label>
                       <Input
-                        placeholder="Room/Unit number (optional)"
+                        placeholder="Room/Unit number"
                         value={checkoutForm.roomNumber}
                         onChange={(e) => setCheckoutForm(prev => ({ ...prev, roomNumber: e.target.value }))}
                       />
@@ -195,8 +212,8 @@ ${checkoutForm.address} ${checkoutForm.roomNumber || ""}` : ""}
             </div>
           )}
         </div>
-      </SheetContent>
-    </Sheet>
+      </DrawerContent>
+    </Drawer>
   );
 };
 
