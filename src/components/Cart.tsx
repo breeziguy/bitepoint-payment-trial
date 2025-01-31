@@ -95,6 +95,7 @@ const Cart = ({ open, onClose }: CartProps) => {
     }
 
     try {
+      // Create the order first
       const { data: orderData, error: orderError } = await supabase
         .from("orders")
         .insert([
@@ -111,6 +112,7 @@ const Cart = ({ open, onClose }: CartProps) => {
 
       if (orderError) throw orderError;
 
+      // Create order items
       const orderItems = items.map((item) => ({
         order_id: orderData.id,
         menu_item_id: item.id,
@@ -124,36 +126,50 @@ const Cart = ({ open, onClose }: CartProps) => {
 
       if (itemsError) throw itemsError;
 
-      const orderDetails = `
-*New Order*
-${checkoutForm.deliveryType === "pickup" ? "PICKUP" : "DELIVERY"}
+      // Create tracking token
+      const { data: trackingData, error: trackingError } = await supabase
+        .from("order_tracking")
+        .insert([{ order_id: orderData.id }])
+        .select()
+        .single();
 
+      if (trackingError) throw trackingError;
+
+      // Generate tracking URL
+      const trackingUrl = `${window.location.origin}/track/${trackingData.tracking_token}`;
+
+      const orderDetails = `
+*New Order #${orderData.id.slice(0, 8)}*
+${checkoutForm.deliveryType === "pickup" ? "*PICKUP*" : "*DELIVERY*"}
+
+*Order Items:*
 ${items
   .map(
     (item) =>
-      `${item.quantity}x ${item.name} - ${formatPrice(item.price * item.quantity)}`
+      `• ${item.quantity}x ${item.name}\n   _${formatPrice(item.price * item.quantity)}_`
   )
   .join("\n")}
 
-Order Summary:
-Items: ${formatPrice(subtotal)}
-${checkoutForm.deliveryType === "delivery" ? `Delivery: ${formatPrice(deliveryFee)}\n` : ""}
-Total: ${formatPrice(total)}
+*Order Summary:*
+• Items: ${formatPrice(subtotal)}
+${checkoutForm.deliveryType === "delivery" ? `• Delivery: ${formatPrice(deliveryFee)}\n` : ""}• *Total: ${formatPrice(total)}*
 
-Customer Details:
-Name: ${checkoutForm.name}
-WhatsApp: ${checkoutForm.whatsapp}
-Service: ${checkoutForm.deliveryType}
+*Customer Details:*
+• Name: ${checkoutForm.name}
+• WhatsApp: ${checkoutForm.whatsapp}
+• Service: ${checkoutForm.deliveryType}
 ${
   checkoutForm.deliveryType === "delivery"
     ? `
-Delivery Address:
-${checkoutForm.streetAddress}
-${checkoutForm.unitNumber ? checkoutForm.unitNumber + "\n" : ""}
-${checkoutForm.city}
-${checkoutForm.postalCode}`
+*Delivery Address:*
+• ${checkoutForm.streetAddress}
+${checkoutForm.unitNumber ? `• ${checkoutForm.unitNumber}\n` : ""}• ${checkoutForm.city}
+• ${checkoutForm.postalCode}`
     : ""
-}`;
+}
+
+*Track Your Order:*
+${trackingUrl}`;
 
       const whatsappNumber = storeSettings?.whatsapp_number || "+1234567890";
       const whatsappLink = `https://wa.me/${whatsappNumber.replace(/\+/g, "")}?text=${encodeURIComponent(
