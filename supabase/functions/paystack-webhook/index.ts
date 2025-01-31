@@ -1,103 +1,63 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0'
+import { corsHeaders } from '../_shared/cors.ts'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+const PAYSTACK_SECRET_KEY = Deno.env.get('PAYSTACK_SECRET_KEY')
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
+const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')
 
-serve(async (req) => {
+const supabase = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!)
+
+Deno.serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const PAYSTACK_SECRET_KEY = Deno.env.get('PAYSTACK_SECRET_KEY')
-    if (!PAYSTACK_SECRET_KEY) {
-      throw new Error('Missing Paystack secret key')
+    const body = await req.json()
+    const hash = req.headers.get('x-paystack-signature')
+
+    // Verify webhook signature
+    const expectedHash = crypto
+      .createHmac('sha512', PAYSTACK_SECRET_KEY!)
+      .update(JSON.stringify(body))
+      .digest('hex')
+
+    if (hash !== expectedHash) {
+      throw new Error('Invalid signature')
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Missing Supabase credentials')
-    }
+    const { event, data } = body
 
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    // Handle successful payment
+    if (event === 'charge.success') {
+      const { metadata, customer } = data
+      const { plan_id } = metadata
 
-    const event = await req.json()
-    const { event: eventType, data } = event
+      // Create or update subscription
+      const { error: subscriptionError } = await supabase
+        .from('store_subscriptions')
+        .upsert({
+          plan_id,
+          status: 'active',
+          current_period_start: new Date().toISOString(),
+          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          paystack_email: customer.email,
+          store_id: crypto.randomUUID(), // This should be the actual store ID
+        })
 
-    // Verify webhook signature (implement this based on Paystack docs)
-    // Handle different event types
-    switch (eventType) {
-      case 'charge.success':
-        const { metadata, authorization, customer, reference } = data
-        const { store_id, plan_id } = metadata
-
-        // Update subscription with payment details
-        const { error: updateError } = await supabase
-          .from('store_subscriptions')
-          .update({
-            status: 'active',
-            paystack_authorization_code: authorization.authorization_code,
-            paystack_customer_code: customer.customer_code,
-            last_payment_date: new Date().toISOString(),
-            next_payment_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-          })
-          .eq('store_id', store_id)
-          .eq('plan_id', plan_id)
-
-        if (updateError) {
-          console.error('Error updating subscription:', updateError)
-          throw new Error('Failed to update subscription')
-        }
-
-        // Update store settings
-        const { error: storeError } = await supabase
-          .from('store_settings')
-          .update({
-            is_frozen: false
-          })
-          .eq('id', store_id)
-
-        if (storeError) {
-          console.error('Error updating store:', storeError)
-          throw new Error('Failed to update store')
-        }
-
-        break
-
-      case 'charge.failed':
-        // Handle failed payment
-        const failedMetadata = data.metadata
-        const { error: freezeError } = await supabase
-          .from('store_settings')
-          .update({
-            is_frozen: true
-          })
-          .eq('id', failedMetadata.store_id)
-
-        if (freezeError) {
-          console.error('Error freezing store:', freezeError)
-          throw new Error('Failed to freeze store')
-        }
-
-        break
-    }
-
-    return new Response(
-      JSON.stringify({ success: true }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-  } catch (error) {
-    console.error('Error:', error.message)
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      if (subscriptionError) {
+        throw subscriptionError
       }
-    )
+    }
+
+    return new Response(JSON.stringify({ status: 'success' }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 400,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
   }
 })

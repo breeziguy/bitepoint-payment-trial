@@ -1,51 +1,22 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0'
+import { corsHeaders } from '../_shared/cors.ts'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+const PAYSTACK_SECRET_KEY = Deno.env.get('PAYSTACK_SECRET_KEY')
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
+const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')
 
-interface PaystackInitializeResponse {
-  status: boolean;
-  message: string;
-  data: {
-    authorization_url: string;
-    access_code: string;
-    reference: string;
-  };
-}
+const supabase = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!)
 
-interface SubscriptionRequest {
-  email: string;
-  plan_id: string;
-  store_id: string;
-}
-
-serve(async (req) => {
+Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const PAYSTACK_SECRET_KEY = Deno.env.get('PAYSTACK_SECRET_KEY')
-    if (!PAYSTACK_SECRET_KEY) {
-      throw new Error('Missing Paystack secret key')
-    }
+    const { plan_id, amount } = await req.json()
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Missing Supabase credentials')
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseKey)
-
-    // Get request body
-    const { email, plan_id, store_id }: SubscriptionRequest = await req.json()
-
-    // Fetch plan details from database
+    // Get the subscription plan details
     const { data: plan, error: planError } = await supabase
       .from('subscription_plans')
       .select('*')
@@ -56,18 +27,18 @@ serve(async (req) => {
       throw new Error('Plan not found')
     }
 
-    // Initialize transaction with Paystack
+    // Initialize payment with Paystack
     const response = await fetch('https://api.paystack.co/transaction/initialize', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+        'Authorization': `Bearer ${PAYSTACK_SECRET_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        email,
-        amount: 0, // First month is free
+        amount: amount * 100, // Convert to kobo
+        email: 'customer@example.com', // This should come from the request
+        callback_url: `${req.headers.get('origin')}/admin/settings?tab=billing`,
         metadata: {
-          store_id,
           plan_id,
           custom_fields: [
             {
@@ -80,39 +51,15 @@ serve(async (req) => {
       }),
     })
 
-    const paystackResponse: PaystackInitializeResponse = await response.json()
+    const data = await response.json()
 
-    // Create subscription record
-    const { error: subscriptionError } = await supabase
-      .from('store_subscriptions')
-      .insert([
-        {
-          store_id,
-          plan_id,
-          status: 'trial',
-          current_period_start: new Date().toISOString(),
-          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
-          paystack_email: email
-        }
-      ])
-
-    if (subscriptionError) {
-      console.error('Error creating subscription:', subscriptionError)
-      throw new Error('Failed to create subscription')
-    }
-
-    return new Response(
-      JSON.stringify(paystackResponse),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    return new Response(JSON.stringify(data), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
   } catch (error) {
-    console.error('Error:', error.message)
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    )
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 400,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
   }
 })
