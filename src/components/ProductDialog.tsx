@@ -17,7 +17,10 @@ const ProductDialog = ({ product, isOpen, onClose }: ProductDialogProps) => {
   if (!isOpen || !product) return null;
 
   const formatPrice = (price: number) => {
-    return `₦${(price * 1000).toLocaleString()}`;
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN'
+    }).format(price);
   };
 
   const handleAdd = () => {

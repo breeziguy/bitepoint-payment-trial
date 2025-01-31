@@ -12,7 +12,10 @@ const FloatingCartBar = ({ onCartClick }: FloatingCartBarProps) => {
   const totalCost = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   const formatPrice = (price: number) => {
-    return `₦${(price * 1000).toLocaleString()}`;
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN'
+    }).format(price);
   };
 
   if (totalItems === 0) return null;

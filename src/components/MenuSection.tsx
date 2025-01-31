@@ -33,7 +33,10 @@ const MenuSection = ({ onAddToCart, category, featured }: MenuSectionProps) => {
   });
 
   const formatPrice = (price: number) => {
-    return `₦${price.toLocaleString('en-NG')}`;
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN'
+    }).format(price);
   };
 
   if (isLoading) {
