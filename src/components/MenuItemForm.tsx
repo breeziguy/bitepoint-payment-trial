@@ -6,6 +6,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { X, Upload, Image } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface MenuItemFormProps {
   onClose: () => void;
@@ -32,6 +40,19 @@ const MenuItemForm = ({ onClose, onSuccess, initialData }: MenuItemFormProps) =>
     image_url: initialData?.image_url || "",
   });
 
+  const { data: categories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('name');
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setImageFile(e.target.files[0]);
@@ -39,7 +60,6 @@ const MenuItemForm = ({ onClose, onSuccess, initialData }: MenuItemFormProps) =>
   };
 
   const uploadImage = async (file: File) => {
-    // First check if user is authenticated
     const { data: { session }, error: authError } = await supabase.auth.getSession();
     if (authError || !session) {
       throw new Error('Authentication required for image upload');
@@ -162,14 +182,24 @@ const MenuItemForm = ({ onClose, onSuccess, initialData }: MenuItemFormProps) =>
 
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
-            <Input
-              id="category"
+            <Select
               value={formData.category}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, category: e.target.value }))
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, category: value }))
               }
               required
-            />
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories?.map((category) => (
+                  <SelectItem key={category.id} value={category.name}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
