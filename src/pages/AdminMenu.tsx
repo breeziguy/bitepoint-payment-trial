@@ -13,6 +13,7 @@ import {
 import { Edit, Trash2, Image, Plus, FolderPlus } from "lucide-react";
 import MenuItemForm from "@/components/MenuItemForm";
 import CategoryForm from "@/components/CategoryForm";
+import AddonForm from "@/components/AddonForm";
 import { useToast } from "@/components/ui/use-toast";
 import {
   AlertDialog,
@@ -26,12 +27,13 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const formatPrice = (price: number) => {
-  return `₦${(price * 1000).toLocaleString()}`;
+  return `₦${price.toLocaleString('en-NG')}`;
 };
 
 export default function AdminMenu() {
   const [showForm, setShowForm] = useState(false);
   const [showCategoryForm, setShowCategoryForm] = useState(false);
+  const [showAddonForm, setShowAddonForm] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [deleteItem, setDeleteItem] = useState<any>(null);
   const { toast } = useToast();
@@ -42,7 +44,8 @@ export default function AdminMenu() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('menu_items')
-        .select('*, categories(name)');
+        .select('*')
+        .neq('category', 'addon');
       
       if (error) throw error;
       return data;
@@ -82,6 +85,12 @@ export default function AdminMenu() {
             onClick={() => setShowCategoryForm(true)}
           >
             <FolderPlus className="h-4 w-4" /> Manage Categories
+          </Button>
+          <Button 
+            className="flex items-center gap-2"
+            onClick={() => setShowAddonForm(true)}
+          >
+            <FolderPlus className="h-4 w-4" /> Manage Addons
           </Button>
           <Button 
             className="flex items-center gap-2"
@@ -181,6 +190,15 @@ export default function AdminMenu() {
           onClose={() => setShowCategoryForm(false)}
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: ['categories'] });
+          }}
+        />
+      )}
+
+      {showAddonForm && (
+        <AddonForm
+          onClose={() => setShowAddonForm(false)}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['addons'] });
           }}
         />
       )}
