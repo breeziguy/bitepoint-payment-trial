@@ -35,6 +35,7 @@ const Cart = ({ open, onClose }: CartProps) => {
       const { data, error } = await supabase
         .from("store_settings")
         .select("whatsapp_number")
+        .limit(1)
         .single();
       
       if (error) throw error;
@@ -42,7 +43,7 @@ const Cart = ({ open, onClose }: CartProps) => {
     },
   });
   
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const deliveryFee = checkoutForm.deliveryType === "delivery" ? selectedZonePrice : 0;
   const total = subtotal + deliveryFee;
 
@@ -94,7 +95,6 @@ const Cart = ({ open, onClose }: CartProps) => {
     }
 
     try {
-      // Save order to database
       const { data: orderData, error: orderError } = await supabase
         .from("orders")
         .insert([
@@ -111,7 +111,6 @@ const Cart = ({ open, onClose }: CartProps) => {
 
       if (orderError) throw orderError;
 
-      // Save order items
       const orderItems = items.map((item) => ({
         order_id: orderData.id,
         menu_item_id: item.id,
@@ -125,7 +124,6 @@ const Cart = ({ open, onClose }: CartProps) => {
 
       if (itemsError) throw itemsError;
 
-      // Format WhatsApp message
       const orderDetails = `
 *New Order*
 ${checkoutForm.deliveryType === "pickup" ? "PICKUP" : "DELIVERY"}
@@ -162,7 +160,6 @@ ${checkoutForm.postalCode}`
         orderDetails
       )}`;
       
-      // Clear cart and reset form
       clearCart();
       setCheckoutForm({
         name: "",
@@ -172,7 +169,6 @@ ${checkoutForm.postalCode}`
       setShowCheckoutForm(false);
       onClose();
       
-      // Open WhatsApp
       window.open(whatsappLink, "_blank");
       
       toast({
@@ -198,7 +194,6 @@ ${checkoutForm.postalCode}`
         
         <div className="flex-1 overflow-y-auto px-4 pb-4">
           {!showCheckoutForm ? (
-            // Cart Items View
             <div className="space-y-4">
               {items.length === 0 ? (
                 <p className="text-center text-gray-500">Your cart is empty</p>
