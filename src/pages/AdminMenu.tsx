@@ -25,6 +25,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+const formatPrice = (price: number) => {
+  return `₦${(price * 1000).toLocaleString()}`;
+};
+
 export default function AdminMenu() {
   const [showForm, setShowForm] = useState(false);
   const [showCategoryForm, setShowCategoryForm] = useState(false);
