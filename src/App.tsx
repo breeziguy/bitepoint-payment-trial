@@ -6,6 +6,7 @@ import AdminMenu from "./pages/AdminMenu";
 import AdminOrders from "./pages/AdminOrders";
 import AdminSettings from "./pages/AdminSettings";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
 
 const router = createBrowserRouter([
   {
