@@ -26,6 +26,11 @@ const StoreContactSettings = ({ storeSettings }: StoreContactSettingsProps) => {
       const formData = new FormData(e.currentTarget);
       const whatsappNumber = formData.get("whatsapp_number") as string;
 
+      console.log("Updating WhatsApp number:", {
+        id: storeSettings.id,
+        whatsappNumber,
+      });
+
       const { error } = await supabase
         .from("store_settings")
         .update({ whatsapp_number: whatsappNumber })
