@@ -5,13 +5,15 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
 import { useContext, useState, useEffect } from "react";
-import { CartContext, CartItem } from "./CartContext";  
+import { CartContext, CartItem as CartItemType } from "./CartContext";  
 import { useToast } from "@/hooks/use-toast";
 import CheckoutForm, { CheckoutFormData } from "./CheckoutForm";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import CartItem from "./CartItem";
+import { formatPrice } from "@/utils/formatPrice";
+import { generateOrderMessage } from "@/utils/generateOrderMessage";
 
 interface CartProps {
   open: boolean;
@@ -40,14 +42,13 @@ const Cart = ({ open, onClose }: CartProps) => {
         .single();
       
       if (error) {
-        // Generic error message without exposing details
         throw new Error("Unable to load store settings");
       }
       return data;
     },
   });
   
-  const calculateItemTotal = (item: CartItem) => {
+  const calculateItemTotal = (item: CartItemType) => {
     let itemTotal = item.price * item.quantity;
     if (item.addons) {
       itemTotal += item.addons.reduce((sum, addon) => sum + (addon.price * item.quantity), 0);
@@ -78,13 +79,6 @@ const Cart = ({ open, onClose }: CartProps) => {
       setSelectedZoneName("");
     }
   }, [checkoutForm.deliveryZoneId]);
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN'
-    }).format(price);
-  };
 
   const handleCheckout = async () => {
     if (!checkoutForm.name || !checkoutForm.whatsapp) {
@@ -123,14 +117,7 @@ const Cart = ({ open, onClose }: CartProps) => {
         .select()
         .single();
 
-      if (orderError) {
-        toast({
-          title: "Error",
-          description: "Unable to process order. Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
+      if (orderError) throw orderError;
 
       const orderItems = items.map((item) => ({
         order_id: orderData.id,
@@ -144,14 +131,7 @@ const Cart = ({ open, onClose }: CartProps) => {
         .from("order_items")
         .insert(orderItems);
 
-      if (itemsError) {
-        toast({
-          title: "Error",
-          description: "Unable to process order items. Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
+      if (itemsError) throw itemsError;
 
       const { data: trackingData, error: trackingError } = await supabase
         .from("order_tracking")
@@ -159,66 +139,29 @@ const Cart = ({ open, onClose }: CartProps) => {
         .select()
         .single();
 
-      if (trackingError) {
-        toast({
-          title: "Error",
-          description: "Unable to generate tracking information. Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
+      if (trackingError) throw trackingError;
 
       const trackingUrl = `${window.location.origin}/track/${trackingData.tracking_token}`;
 
-      const orderDetails = `
-*New Order #${orderData.id.slice(0, 8)}*
-> ${checkoutForm.deliveryType === "pickup" ? "*PICKUP*" : `*DELIVERY - ${selectedZoneName}*`}
-
-${items
-  .map(
-    (item) =>
-      `\`${item.quantity}x ${item.name} - ${formatPrice(calculateItemTotal(item))}\`${
-        item.addons && item.addons.length > 0
-          ? `\n${item.addons.map((addon) => `  + ${addon.name}`).join("\n")}`
-          : ""
-      }`
-  )
-  .join("\n")}
-
-> Order Summary:
-Items: ${formatPrice(subtotal)}
-${checkoutForm.deliveryType === "delivery" ? `Delivery (${selectedZoneName}): ${formatPrice(deliveryFee)}\n` : ""}
-*Total: ${formatPrice(total)}*
-
-> Customer Details:
-Name: ${checkoutForm.name}
-WhatsApp: ${checkoutForm.whatsapp}
-Service: ${checkoutForm.deliveryType}
-
-${
-  checkoutForm.deliveryType === "delivery"
-    ? `> Delivery Address:
-${checkoutForm.streetAddress}
-${checkoutForm.unitNumber ? `${checkoutForm.unitNumber}\n` : ""}
-Zone: ${selectedZoneName}`
-    : ""
-}
-
-> Track Your Order:
-${trackingUrl}`;
-
-      const whatsappNumber = storeSettings?.whatsapp_number || "";
+      const whatsappNumber = storeSettings?.whatsapp_number;
       if (!whatsappNumber) {
-        toast({
-          title: "Error",
-          description: "Store contact information is not available. Please try again later.",
-          variant: "destructive",
-        });
-        return;
+        throw new Error("Store contact information is not available");
       }
 
+      const orderMessage = generateOrderMessage({
+        orderId: orderData.id,
+        items,
+        checkoutForm,
+        selectedZoneName,
+        subtotal,
+        deliveryFee,
+        total,
+        trackingUrl,
+        calculateItemTotal,
+      });
+
       const whatsappLink = `https://wa.me/${whatsappNumber.replace(/\+/g, "")}?text=${encodeURIComponent(
-        orderDetails
+        orderMessage
       )}`;
       
       clearCart();
@@ -260,37 +203,12 @@ ${trackingUrl}`;
               ) : (
                 <div className="space-y-4">
                   {items.map((item) => (
-                    <div
+                    <CartItem
                       key={item.id}
-                      className="flex justify-between items-start border-b pb-4"
-                    >
-                      <div className="space-y-1">
-                        <h3 className="font-medium">{item.name}</h3>
-                        <p className="text-sm text-gray-500">
-                          {formatPrice(item.price)} x {item.quantity}
-                        </p>
-                        {item.addons && item.addons.length > 0 && (
-                          <div className="text-sm text-gray-500">
-                            <p className="font-medium">Add-ons:</p>
-                            {item.addons.map((addon) => (
-                              <p key={addon.id}>
-                                + {addon.name} ({formatPrice(addon.price)})
-                              </p>
-                            ))}
-                          </div>
-                        )}
-                        <p className="text-sm font-medium">
-                          Item Total: {formatPrice(calculateItemTotal(item))}
-                        </p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeFromCart(item.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                      item={item}
+                      onRemove={removeFromCart}
+                      calculateItemTotal={calculateItemTotal}
+                    />
                   ))}
                 </div>
               )}
