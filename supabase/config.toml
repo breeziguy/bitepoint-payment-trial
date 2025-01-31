@@ -13,9 +13,9 @@ enabled = true
 port = 54323
 
 [[functions]]
-name = "paystack"
+[functions.paystack]
 verify_jwt = true
 
 [[functions]]
-name = "paystack-webhook"
+[functions.paystack-webhook]
 verify_jwt = false
