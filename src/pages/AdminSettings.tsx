@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import {
   Table,
   TableBody,
@@ -47,7 +47,7 @@ export default function AdminSettings() {
             hero_title: "Delicious food, delivered to you",
             hero_subtitle: "Order your favorite meals from the best restaurants",
             hero_text_color: "#000000",
-            whatsapp_number: "+2348000000000" // Add default WhatsApp number
+            whatsapp_number: "+2348000000000"
           }])
           .select()
           .single();
@@ -94,7 +94,7 @@ export default function AdminSettings() {
         .from("store_settings")
         .update({
           ...settings,
-          whatsapp_number: storeSettings.whatsapp_number || "+2348000000000" // Preserve existing WhatsApp number
+          whatsapp_number: storeSettings.whatsapp_number || "+2348000000000"
         })
         .eq("id", storeSettings.id);
 
