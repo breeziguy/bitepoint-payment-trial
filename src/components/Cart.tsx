@@ -7,7 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { useContext, useState, useEffect } from "react";
-import { CartContext, CartItem } from "./CartContext";  // Added CartItem import here
+import { CartContext, CartItem } from "./CartContext";  
 import { useToast } from "@/hooks/use-toast";
 import CheckoutForm, { CheckoutFormData } from "./CheckoutForm";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +28,7 @@ const Cart = ({ open, onClose }: CartProps) => {
     deliveryType: "pickup",
   });
   const [selectedZonePrice, setSelectedZonePrice] = useState(0);
+  const [selectedZoneName, setSelectedZoneName] = useState("");
 
   const { data: storeSettings } = useQuery({
     queryKey: ["store-settings"],
@@ -57,19 +58,21 @@ const Cart = ({ open, onClose }: CartProps) => {
 
   useEffect(() => {
     if (checkoutForm.deliveryZoneId) {
-      const fetchZonePrice = async () => {
+      const fetchZoneDetails = async () => {
         const { data } = await supabase
           .from("delivery_zones")
-          .select("price")
+          .select("price, name")
           .eq("id", checkoutForm.deliveryZoneId)
           .single();
         if (data) {
           setSelectedZonePrice(data.price);
+          setSelectedZoneName(data.name);
         }
       };
-      fetchZonePrice();
+      fetchZoneDetails();
     } else {
       setSelectedZonePrice(0);
+      setSelectedZoneName("");
     }
   }, [checkoutForm.deliveryZoneId]);
 
@@ -133,7 +136,6 @@ const Cart = ({ open, onClose }: CartProps) => {
 
       if (itemsError) throw itemsError;
 
-      // Create tracking token
       const { data: trackingData, error: trackingError } = await supabase
         .from("order_tracking")
         .insert([{ order_id: orderData.id }])
@@ -142,23 +144,26 @@ const Cart = ({ open, onClose }: CartProps) => {
 
       if (trackingError) throw trackingError;
 
-      // Generate tracking URL
       const trackingUrl = `${window.location.origin}/track/${trackingData.tracking_token}`;
 
       const orderDetails = `
 *New Order #${orderData.id.slice(0, 8)}*
-> ${checkoutForm.deliveryType === "pickup" ? "*PICKUP*" : "*DELIVERY*"}
+> ${checkoutForm.deliveryType === "pickup" ? "*PICKUP*" : `*DELIVERY - ${selectedZoneName}*`}
 
 ${items
   .map(
     (item) =>
-      `\`${item.quantity}x ${item.name} - ${formatPrice(item.price * item.quantity)}\``
+      `\`${item.quantity}x ${item.name} - ${formatPrice(calculateItemTotal(item))}\`${
+        item.addons && item.addons.length > 0
+          ? `\n${item.addons.map((addon) => `  + ${addon.name}`).join("\n")}`
+          : ""
+      }`
   )
   .join("\n")}
 
 > Order Summary:
 Items: ${formatPrice(subtotal)}
-${checkoutForm.deliveryType === "delivery" ? `Delivery: ${formatPrice(deliveryFee)}\n` : ""}
+${checkoutForm.deliveryType === "delivery" ? `Delivery (${selectedZoneName}): ${formatPrice(deliveryFee)}\n` : ""}
 *Total: ${formatPrice(total)}*
 
 > Customer Details:
@@ -171,7 +176,8 @@ ${
     ? `> Delivery Address:
 ${checkoutForm.streetAddress}
 ${checkoutForm.unitNumber ? `${checkoutForm.unitNumber}\n` : ""}${checkoutForm.city}
-${checkoutForm.postalCode}`
+${checkoutForm.postalCode}
+Zone: ${selectedZoneName}`
     : ""
 }
 
