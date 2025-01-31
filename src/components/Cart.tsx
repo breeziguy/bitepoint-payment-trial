@@ -140,35 +140,35 @@ const Cart = ({ open, onClose }: CartProps) => {
 
       const orderDetails = `
 *New Order #${orderData.id.slice(0, 8)}*
-${checkoutForm.deliveryType === "pickup" ? "*PICKUP*" : "*DELIVERY*"}
+> ${checkoutForm.deliveryType === "pickup" ? "*PICKUP*" : "*DELIVERY*"}
 
-*Order Items:*
 ${items
   .map(
     (item) =>
-      `• ${item.quantity}x ${item.name}\n   _${formatPrice(item.price * item.quantity)}_`
+      `\`${item.quantity}x ${item.name} - ${formatPrice(item.price * item.quantity)}\``
   )
   .join("\n")}
 
-*Order Summary:*
-• Items: ${formatPrice(subtotal)}
-${checkoutForm.deliveryType === "delivery" ? `• Delivery: ${formatPrice(deliveryFee)}\n` : ""}• *Total: ${formatPrice(total)}*
+> Order Summary:
+Items: ${formatPrice(subtotal)}
+${checkoutForm.deliveryType === "delivery" ? `Delivery: ${formatPrice(deliveryFee)}\n` : ""}
+*Total: ${formatPrice(total)}*
 
-*Customer Details:*
-• Name: ${checkoutForm.name}
-• WhatsApp: ${checkoutForm.whatsapp}
-• Service: ${checkoutForm.deliveryType}
+> Customer Details:
+Name: ${checkoutForm.name}
+WhatsApp: ${checkoutForm.whatsapp}
+Service: ${checkoutForm.deliveryType}
+
 ${
   checkoutForm.deliveryType === "delivery"
-    ? `
-*Delivery Address:*
-• ${checkoutForm.streetAddress}
-${checkoutForm.unitNumber ? `• ${checkoutForm.unitNumber}\n` : ""}• ${checkoutForm.city}
-• ${checkoutForm.postalCode}`
+    ? `> Delivery Address:
+${checkoutForm.streetAddress}
+${checkoutForm.unitNumber ? `${checkoutForm.unitNumber}\n` : ""}${checkoutForm.city}
+${checkoutForm.postalCode}`
     : ""
 }
 
-*Track Your Order:*
+> Track Your Order:
 ${trackingUrl}`;
 
       const whatsappNumber = storeSettings?.whatsapp_number || "+1234567890";
