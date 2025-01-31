@@ -49,10 +49,15 @@ const CheckoutForm = ({
 
   useEffect(() => {
     const fetchDeliveryZones = async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("delivery_zones")
         .select("*")
         .order("name");
+      if (error) {
+        // Generic error without exposing details
+        console.error("Error fetching delivery zones");
+        return;
+      }
       if (data) {
         setDeliveryZones(data);
       }

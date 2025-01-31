@@ -39,7 +39,10 @@ const Cart = ({ open, onClose }: CartProps) => {
         .limit(1)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        // Generic error message without exposing details
+        throw new Error("Unable to load store settings");
+      }
       return data;
     },
   });
@@ -120,7 +123,14 @@ const Cart = ({ open, onClose }: CartProps) => {
         .select()
         .single();
 
-      if (orderError) throw orderError;
+      if (orderError) {
+        toast({
+          title: "Error",
+          description: "Unable to process order. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       const orderItems = items.map((item) => ({
         order_id: orderData.id,
@@ -134,7 +144,14 @@ const Cart = ({ open, onClose }: CartProps) => {
         .from("order_items")
         .insert(orderItems);
 
-      if (itemsError) throw itemsError;
+      if (itemsError) {
+        toast({
+          title: "Error",
+          description: "Unable to process order items. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       const { data: trackingData, error: trackingError } = await supabase
         .from("order_tracking")
@@ -142,7 +159,14 @@ const Cart = ({ open, onClose }: CartProps) => {
         .select()
         .single();
 
-      if (trackingError) throw trackingError;
+      if (trackingError) {
+        toast({
+          title: "Error",
+          description: "Unable to generate tracking information. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       const trackingUrl = `${window.location.origin}/track/${trackingData.tracking_token}`;
 
@@ -183,7 +207,16 @@ Zone: ${selectedZoneName}`
 > Track Your Order:
 ${trackingUrl}`;
 
-      const whatsappNumber = storeSettings?.whatsapp_number || "+1234567890";
+      const whatsappNumber = storeSettings?.whatsapp_number || "";
+      if (!whatsappNumber) {
+        toast({
+          title: "Error",
+          description: "Store contact information is not available. Please try again later.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const whatsappLink = `https://wa.me/${whatsappNumber.replace(/\+/g, "")}?text=${encodeURIComponent(
         orderDetails
       )}`;
@@ -203,11 +236,10 @@ ${trackingUrl}`;
         title: "Order placed successfully",
         description: "You will be redirected to WhatsApp to complete your order.",
       });
-    } catch (error: any) {
-      console.error("Error processing order:", error);
+    } catch (error) {
       toast({
         title: "Error",
-        description: error.message || "Failed to process order",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     }
