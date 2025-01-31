@@ -6,6 +6,7 @@ import Cart from "@/components/Cart";
 import { CartProvider, CartContext } from "@/components/CartContext";
 import ProductDialog from "@/components/ProductDialog";
 import FloatingCartBar from "@/components/FloatingCartBar";
+import { Link } from "react-router-dom";
 
 const Index = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -19,7 +20,14 @@ const Index = () => {
         <header className="bg-white shadow-sm sticky top-0 z-50">
           <div className="container mx-auto px-4 h-16 flex items-center justify-between">
             <h1 className="text-xl font-bold">Food Frenzy</h1>
-            <CartButton onOpen={() => setIsCartOpen(true)} />
+            <div className="flex items-center gap-4">
+              {import.meta.env.DEV && (
+                <Button variant="outline" asChild>
+                  <Link to="/admin">Admin</Link>
+                </Button>
+              )}
+              <CartButton onOpen={() => setIsCartOpen(true)} />
+            </div>
           </div>
         </header>
 
