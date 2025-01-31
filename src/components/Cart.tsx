@@ -103,16 +103,16 @@ ${checkoutForm.postalCode}` : ""}
 
   return (
     <Drawer open={open} onOpenChange={onClose}>
-      <DrawerContent className="h-[90vh]">
-        <DrawerHeader>
+      <DrawerContent className="h-[90vh] overflow-hidden flex flex-col">
+        <DrawerHeader className="flex-none">
           <DrawerTitle>Your Cart</DrawerTitle>
         </DrawerHeader>
         
-        <div className="p-4">
+        <div className="flex-1 overflow-y-auto px-4 pb-4">
           {!showCheckoutForm ? (
             // Cart Items View
             <div className="space-y-4">
-              <div className="space-y-4 max-h-[50vh] overflow-y-auto">
+              <div className="space-y-4">
                 {items.length === 0 ? (
                   <p className="text-center text-gray-500">Your cart is empty</p>
                 ) : (
@@ -139,7 +139,7 @@ ${checkoutForm.postalCode}` : ""}
               </div>
               
               {items.length > 0 && (
-                <div className="space-y-4">
+                <div className="space-y-4 mt-auto">
                   <div className="flex justify-between mb-4">
                     <span className="font-medium">Total</span>
                     <span className="font-medium">{formatPrice(finalTotal)}</span>
@@ -155,7 +155,7 @@ ${checkoutForm.postalCode}` : ""}
             </div>
           ) : (
             // Checkout Form View
-            <div className="space-y-6 animate-in slide-in-from-right">
+            <div className="space-y-6">
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>Name</Label>
