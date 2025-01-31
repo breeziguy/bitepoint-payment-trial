@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { ShoppingCart } from "lucide-react";
-import { CartContext } from "./CartContext";
+import { CartContext, CartItem } from "./CartContext";
 
 interface FloatingCartBarProps {
   onCartClick: () => void;
@@ -9,7 +9,16 @@ interface FloatingCartBarProps {
 const FloatingCartBar = ({ onCartClick }: FloatingCartBarProps) => {
   const { items } = useContext(CartContext);
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalCost = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  
+  const calculateItemTotal = (item: CartItem) => {
+    let itemTotal = item.price * item.quantity;
+    if (item.addons) {
+      itemTotal += item.addons.reduce((sum, addon) => sum + (addon.price * item.quantity), 0);
+    }
+    return itemTotal;
+  };
+
+  const totalCost = items.reduce((sum, item) => sum + calculateItemTotal(item), 0);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-NG', {
