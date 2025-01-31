@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { X } from "lucide-react";
 
@@ -36,35 +36,34 @@ const MenuItemForm = ({ onClose, onSuccess, initialData }: MenuItemFormProps) =>
     setLoading(true);
 
     try {
+      const data = {
+        ...formData,
+        price: Number(formData.price) || 0, // Ensure price is a number
+      };
+
       if (initialData?.id) {
         // Update existing item
         const { error } = await supabase
           .from("menu_items")
-          .update({
-            name: formData.name,
-            price: formData.price,
-            description: formData.description,
-            category: formData.category,
-            image_url: formData.image_url,
-          })
+          .update(data)
           .eq("id", initialData.id);
 
         if (error) throw error;
         toast({ title: "Menu item updated successfully" });
       } else {
         // Create new item
-        const { error } = await supabase.from("menu_items").insert([formData]);
+        const { error } = await supabase.from("menu_items").insert([data]);
         if (error) throw error;
         toast({ title: "Menu item created successfully" });
       }
 
       onSuccess();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving menu item:", error);
       toast({
         title: "Error",
-        description: "Failed to save menu item",
+        description: error.message || "Failed to save menu item",
         variant: "destructive",
       });
     } finally {
@@ -112,7 +111,7 @@ const MenuItemForm = ({ onClose, onSuccess, initialData }: MenuItemFormProps) =>
               onChange={(e) =>
                 setFormData((prev) => ({
                   ...prev,
-                  price: parseFloat(e.target.value),
+                  price: parseFloat(e.target.value) || 0,
                 }))
               }
               required
