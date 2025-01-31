@@ -88,13 +88,13 @@ ${checkoutForm.address} ${checkoutForm.roomNumber || ""}` : ""}
 
   return (
     <Drawer open={open} onOpenChange={onClose}>
-      <DrawerContent>
+      <DrawerContent className="h-[90vh]">
         <DrawerHeader>
           <DrawerTitle>Your Cart</DrawerTitle>
         </DrawerHeader>
         
         <div className="p-4">
-          <div className="space-y-4 max-h-[50vh] overflow-y-auto">
+          <div className="space-y-4 max-h-[30vh] overflow-y-auto">
             {items.length === 0 ? (
               <p className="text-center text-gray-500">Your cart is empty</p>
             ) : (
