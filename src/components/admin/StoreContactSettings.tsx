@@ -7,7 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 interface StoreContactSettingsProps {
-  storeSettings: {
+  storeSettings?: {
     id: string;
     whatsapp_number: string;
   };
@@ -26,29 +26,55 @@ const StoreContactSettings = ({ storeSettings }: StoreContactSettingsProps) => {
       const formData = new FormData(e.currentTarget);
       const whatsappNumber = formData.get("whatsapp_number") as string;
 
-      console.log("Updating WhatsApp number:", {
-        id: storeSettings.id,
-        whatsappNumber,
-      });
+      console.log("Current store settings:", storeSettings);
+      console.log("Attempting to save WhatsApp number:", whatsappNumber);
 
-      const { error } = await supabase
-        .from("store_settings")
-        .update({ whatsapp_number: whatsappNumber })
-        .eq("id", storeSettings.id);
+      if (!storeSettings?.id) {
+        // If no settings exist, create new ones
+        const { data: newSettings, error: insertError } = await supabase
+          .from("store_settings")
+          .insert([{
+            store_name: "Food Frenzy",
+            store_address: "123 Main Street",
+            store_city: "City",
+            store_state: "State",
+            whatsapp_number: whatsappNumber
+          }])
+          .select()
+          .single();
 
-      if (error) throw error;
+        if (insertError) {
+          console.error("Error creating store settings:", insertError);
+          throw insertError;
+        }
+
+        console.log("Created new store settings:", newSettings);
+      } else {
+        // Update existing settings
+        const { error: updateError } = await supabase
+          .from("store_settings")
+          .update({ whatsapp_number: whatsappNumber })
+          .eq("id", storeSettings.id);
+
+        if (updateError) {
+          console.error("Error updating WhatsApp number:", updateError);
+          throw updateError;
+        }
+
+        console.log("Updated WhatsApp number for settings ID:", storeSettings.id);
+      }
 
       await queryClient.invalidateQueries({ queryKey: ["store-settings"] });
       
       toast({
         title: "Success",
-        description: "WhatsApp number updated successfully",
+        description: "WhatsApp number saved successfully",
       });
     } catch (error) {
-      console.error("Error updating WhatsApp number:", error);
+      console.error("Error saving WhatsApp number:", error);
       toast({
         title: "Error",
-        description: "Failed to update WhatsApp number",
+        description: "Failed to save WhatsApp number. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -72,7 +98,7 @@ const StoreContactSettings = ({ storeSettings }: StoreContactSettingsProps) => {
         </p>
       </div>
       <Button type="submit" disabled={isUpdating}>
-        {isUpdating ? "Updating..." : "Update WhatsApp Number"}
+        {isUpdating ? "Saving..." : "Save WhatsApp Number"}
       </Button>
     </form>
   );
