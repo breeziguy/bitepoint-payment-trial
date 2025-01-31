@@ -29,7 +29,10 @@ export default function AdminSettings() {
         .select("*")
         .maybeSingle();
       
-      if (error && error.code !== "PGRST116") throw error;
+      if (error && error.code !== "PGRST116") {
+        console.error("Error fetching store settings:", error);
+        throw error;
+      }
       
       // If no data exists, create a new store settings record
       if (!data) {
@@ -48,7 +51,10 @@ export default function AdminSettings() {
           .select()
           .single();
           
-        if (insertError) throw insertError;
+        if (insertError) {
+          console.error("Error creating store settings:", insertError);
+          throw insertError;
+        }
         return newSettings;
       }
       
@@ -79,16 +85,24 @@ export default function AdminSettings() {
       hero_subtitle: string;
       hero_text_color: string;
     }) => {
-      if (storeSettings?.id) {
-        const { error } = await supabase
-          .from("store_settings")
-          .update(settings)
-          .eq("id", storeSettings.id);
-        if (error) throw error;
+      if (!storeSettings?.id) {
+        throw new Error("No store settings found");
       }
+
+      const { error } = await supabase
+        .from("store_settings")
+        .update(settings)
+        .eq("id", storeSettings.id);
+
+      if (error) {
+        console.error("Error updating store settings:", error);
+        throw error;
+      }
+
+      // Immediately invalidate the query to refresh the data
+      await queryClient.invalidateQueries({ queryKey: ["store-settings"] });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["store-settings"] });
       toast({
         title: "Success",
         description: "Store settings updated successfully",
@@ -97,7 +111,7 @@ export default function AdminSettings() {
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to update store settings",
+        description: "Failed to update store settings. Please try again.",
         variant: "destructive",
       });
       console.error("Error updating store settings:", error);
@@ -145,19 +159,24 @@ export default function AdminSettings() {
     addZoneMutation.mutate(newZone);
   };
 
-  const handleUpdateStore = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleUpdateStore = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    updateStoreMutation.mutate({
-      store_name: formData.get("store_name") as string || "Food Frenzy",
-      store_address: formData.get("address") as string || "123 Main Street",
-      store_city: formData.get("city") as string || "City",
-      store_state: formData.get("state") as string || "State",
-      primary_color: formData.get("primary_color") as string || "#9b87f5",
-      hero_title: formData.get("hero_title") as string || "Delicious food, delivered to you",
-      hero_subtitle: formData.get("hero_subtitle") as string || "Order your favorite meals from the best restaurants",
-      hero_text_color: formData.get("hero_text_color") as string || "#000000",
-    });
+    
+    try {
+      await updateStoreMutation.mutateAsync({
+        store_name: formData.get("store_name") as string || "Food Frenzy",
+        store_address: formData.get("address") as string || "123 Main Street",
+        store_city: formData.get("city") as string || "City",
+        store_state: formData.get("state") as string || "State",
+        primary_color: formData.get("primary_color") as string || "#9b87f5",
+        hero_title: formData.get("hero_title") as string || "Delicious food, delivered to you",
+        hero_subtitle: formData.get("hero_subtitle") as string || "Order your favorite meals from the best restaurants",
+        hero_text_color: formData.get("hero_text_color") as string || "#000000",
+      });
+    } catch (error) {
+      console.error("Error in handleUpdateStore:", error);
+    }
   };
 
   const renderSkeletonInput = () => (
@@ -235,7 +254,9 @@ export default function AdminSettings() {
                 />
               </div>
             </div>
-            <Button type="submit">Update Store Settings</Button>
+            <Button type="submit" disabled={updateStoreMutation.isPending}>
+              {updateStoreMutation.isPending ? "Updating..." : "Update Store Settings"}
+            </Button>
           </form>
         </TabsContent>
 
@@ -353,7 +374,9 @@ export default function AdminSettings() {
                 />
               </div>
             </div>
-            <Button type="submit">Update Branding</Button>
+            <Button type="submit" disabled={updateStoreMutation.isPending}>
+              {updateStoreMutation.isPending ? "Updating..." : "Update Branding"}
+            </Button>
           </form>
         </TabsContent>
       </Tabs>
