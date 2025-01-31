@@ -44,7 +44,7 @@ const ProductDialog = ({ product, isOpen, onClose }: ProductDialogProps) => {
             <X className="h-5 w-5" />
           </Button>
           <img 
-            src={product.image} 
+            src={product.image_url || '/placeholder.svg'} 
             alt={product.name}
             className="w-full h-full object-cover"
           />
