@@ -1,6 +1,6 @@
 import { useState, useContext } from "react";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, X, Plus, Minus, ChevronLeft } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import MenuSection from "@/components/MenuSection";
 import Cart from "@/components/Cart";
 import { CartProvider, CartContext } from "@/components/CartContext";
@@ -11,7 +11,6 @@ const Index = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("home");
-  const { items, setItems } = useContext(CartContext);
 
   return (
     <CartProvider>
@@ -66,8 +65,6 @@ const Index = () => {
         <Cart 
           open={isCartOpen} 
           onClose={() => setIsCartOpen(false)}
-          items={items}
-          setItems={setItems}
         />
 
         {selectedProduct && (
@@ -113,7 +110,6 @@ const SearchBar = () => {
         placeholder="Search for dishes..."
         className="w-full p-3 border rounded-lg pl-10"
       />
-      <X className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer" />
     </div>
   );
 };

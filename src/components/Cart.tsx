@@ -6,29 +6,27 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
+import { useContext } from "react";
+import { CartContext } from "./CartContext";
 
 interface CartProps {
   open: boolean;
   onClose: () => void;
-  items: MenuItem[];
-  setItems: (items: MenuItem[]) => void;
 }
 
-const Cart = ({ open, onClose, items, setItems }: CartProps) => {
-  const total = items.reduce((sum, item) => sum + item.price, 0);
+const Cart = ({ open, onClose }: CartProps) => {
+  const { items, removeFromCart } = useContext(CartContext);
+  
+  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const formatPrice = (price: number) => {
     return `₦${(price * 1000).toLocaleString()}`; // Converting to Naira and formatting
   };
 
-  const removeItem = (itemId: string) => {
-    setItems(items.filter(item => item.id !== itemId));
-  };
-
   const handleCheckout = () => {
     // Format the order message for WhatsApp
     const message = `*New Order*\n\n${items.map(item => 
-      `• ${item.name} - ${formatPrice(item.price)}`
+      `• ${item.name} (${item.quantity}x) - ${formatPrice(item.price * item.quantity)}`
     ).join('\n')}\n\n*Total: ${formatPrice(total)}*`;
     
     // Create WhatsApp link with pre-filled message
@@ -53,12 +51,14 @@ const Cart = ({ open, onClose, items, setItems }: CartProps) => {
                   <div key={item.id} className="flex justify-between items-center border-b pb-4">
                     <div>
                       <h3 className="font-medium">{item.name}</h3>
-                      <p className="text-sm text-gray-500">{formatPrice(item.price)}</p>
+                      <p className="text-sm text-gray-500">
+                        {formatPrice(item.price)} x {item.quantity}
+                      </p>
                     </div>
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => removeItem(item.id)}
+                      onClick={() => removeFromCart(item.id)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
