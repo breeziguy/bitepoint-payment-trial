@@ -11,6 +11,7 @@ import { CartContext } from "./CartContext";
 import { useToast } from "@/hooks/use-toast";
 import CheckoutForm, { CheckoutFormData } from "./CheckoutForm";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 interface CartProps {
   open: boolean;
@@ -27,6 +28,19 @@ const Cart = ({ open, onClose }: CartProps) => {
     deliveryType: "pickup",
   });
   const [selectedZonePrice, setSelectedZonePrice] = useState(0);
+
+  const { data: storeSettings } = useQuery({
+    queryKey: ["store-settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("store_settings")
+        .select("whatsapp_number")
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+  });
   
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const deliveryFee = checkoutForm.deliveryType === "delivery" ? selectedZonePrice : 0;
@@ -143,7 +157,8 @@ ${checkoutForm.postalCode}`
     : ""
 }`;
 
-      const whatsappLink = `https://wa.me/+1234567890?text=${encodeURIComponent(
+      const whatsappNumber = storeSettings?.whatsapp_number || "+1234567890";
+      const whatsappLink = `https://wa.me/${whatsappNumber.replace(/\+/g, "")}?text=${encodeURIComponent(
         orderDetails
       )}`;
       

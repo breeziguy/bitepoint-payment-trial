@@ -15,6 +15,9 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import StoreContactSettings from "@/components/admin/StoreContactSettings";
+
+// ... keep existing code (imports and type definitions)
 
 export default function AdminSettings() {
   const [newZone, setNewZone] = useState({ name: "", price: "" });
@@ -212,6 +215,7 @@ export default function AdminSettings() {
           <TabsTrigger value="store">Store Settings</TabsTrigger>
           <TabsTrigger value="delivery">Delivery Settings</TabsTrigger>
           <TabsTrigger value="branding">Branding</TabsTrigger>
+          <TabsTrigger value="contact">Contact</TabsTrigger>
         </TabsList>
 
         <TabsContent value="store" className="space-y-6">
@@ -378,6 +382,17 @@ export default function AdminSettings() {
               {updateStoreMutation.isPending ? "Updating..." : "Update Branding"}
             </Button>
           </form>
+        </TabsContent>
+
+        <TabsContent value="contact" className="space-y-6">
+          {settingsLoading ? (
+            <div className="space-y-4">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+          ) : (
+            <StoreContactSettings storeSettings={storeSettings} />
+          )}
         </TabsContent>
       </Tabs>
     </div>
