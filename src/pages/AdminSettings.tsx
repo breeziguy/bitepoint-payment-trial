@@ -14,23 +14,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AdminSettings() {
   const [newZone, setNewZone] = useState({ name: "", price: "" });
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
-  const { data: zones, isLoading: zonesLoading } = useQuery({
-    queryKey: ["delivery-zones"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("delivery_zones")
-        .select("*")
-        .order("name");
-      if (error) throw error;
-      return data;
-    },
-  });
 
   const { data: storeSettings, isLoading: settingsLoading } = useQuery({
     queryKey: ["store-settings"],
@@ -39,6 +28,7 @@ export default function AdminSettings() {
         .from("store_settings")
         .select("*")
         .maybeSingle();
+      
       if (error && error.code !== "PGRST116") throw error;
       
       // If no data exists, create a new store settings record
@@ -66,6 +56,18 @@ export default function AdminSettings() {
     },
   });
 
+  const { data: zones, isLoading: zonesLoading } = useQuery({
+    queryKey: ["delivery-zones"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("delivery_zones")
+        .select("*")
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const updateStoreMutation = useMutation({
     mutationFn: async (settings: {
       store_name: string;
@@ -82,16 +84,6 @@ export default function AdminSettings() {
           .from("store_settings")
           .update(settings)
           .eq("id", storeSettings.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("store_settings")
-          .insert([{
-            ...settings,
-            store_address: settings.store_address || "123 Main Street",
-            store_city: settings.store_city || "City",
-            store_state: settings.store_state || "State"
-          }]);
         if (error) throw error;
       }
     },
@@ -168,7 +160,29 @@ export default function AdminSettings() {
     });
   };
 
-  if (zonesLoading || settingsLoading) return <div>Loading...</div>;
+  const renderSkeletonInput = () => (
+    <div className="space-y-2">
+      <Skeleton className="h-4 w-24" />
+      <Skeleton className="h-10 w-full" />
+    </div>
+  );
+
+  if (settingsLoading) {
+    return (
+      <div className="p-8 space-y-8">
+        <Skeleton className="h-8 w-48" />
+        <div className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="space-y-2">
+                {renderSkeletonInput()}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 space-y-8">
@@ -179,7 +193,6 @@ export default function AdminSettings() {
           <TabsTrigger value="store">Store Settings</TabsTrigger>
           <TabsTrigger value="delivery">Delivery Settings</TabsTrigger>
           <TabsTrigger value="branding">Branding</TabsTrigger>
-          <TabsTrigger value="staff">Staff Management</TabsTrigger>
         </TabsList>
 
         <TabsContent value="store" className="space-y-6">
@@ -258,22 +271,30 @@ export default function AdminSettings() {
             </div>
           </form>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Zone Name</TableHead>
-                <TableHead>Delivery Price</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {zones?.map((zone) => (
-                <TableRow key={zone.id}>
-                  <TableCell>{zone.name}</TableCell>
-                  <TableCell>₦{zone.price.toLocaleString()}</TableCell>
-                </TableRow>
+          {zonesLoading ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-12 w-full" />
               ))}
-            </TableBody>
-          </Table>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Zone Name</TableHead>
+                  <TableHead>Delivery Price</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {zones?.map((zone) => (
+                  <TableRow key={zone.id}>
+                    <TableCell>{zone.name}</TableCell>
+                    <TableCell>₦{zone.price.toLocaleString()}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </TabsContent>
 
         <TabsContent value="branding" className="space-y-6">
@@ -334,12 +355,6 @@ export default function AdminSettings() {
             </div>
             <Button type="submit">Update Branding</Button>
           </form>
-        </TabsContent>
-
-        <TabsContent value="staff" className="space-y-6">
-          <div className="text-center text-muted-foreground">
-            Staff management coming soon...
-          </div>
         </TabsContent>
       </Tabs>
     </div>

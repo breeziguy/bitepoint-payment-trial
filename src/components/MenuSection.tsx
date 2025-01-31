@@ -1,6 +1,7 @@
 import { Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface MenuSectionProps {
   onAddToCart: (item: MenuItem) => void;
@@ -32,11 +33,24 @@ const MenuSection = ({ onAddToCart, category, featured }: MenuSectionProps) => {
   });
 
   const formatPrice = (price: number) => {
-    return `₦${(price * 1000).toLocaleString()}`;
+    return `₦${price.toLocaleString()}`;
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="flex items-start space-x-4 p-4 bg-white rounded-lg">
+            <Skeleton className="w-24 h-24 rounded-lg" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-full" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   }
 
   if (!menuItems?.length) {
