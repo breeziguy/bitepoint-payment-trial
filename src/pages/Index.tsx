@@ -32,26 +32,13 @@ const Index = () => {
   const { data: categories } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
-      // First get all categories
-      const { data: allCategories, error: categoriesError } = await supabase
+      const { data, error } = await supabase
         .from('categories')
         .select('*')
         .order('name');
       
-      if (categoriesError) throw categoriesError;
-
-      // Then get all menu items with their categories to filter active ones
-      const { data: menuItems, error: menuError } = await supabase
-        .from('menu_items')
-        .select('category_id');
-      
-      if (menuError) throw menuError;
-      
-      // Create a set of active category IDs
-      const activeCategoryIds = new Set(menuItems?.map(item => item.category_id) || []);
-      
-      // Filter categories to only include those that have menu items
-      return allCategories?.filter(category => activeCategoryIds.has(category.id)) || [];
+      if (error) throw error;
+      return data;
     },
   });
 
@@ -108,9 +95,9 @@ const Index = () => {
             {categories?.map((category) => (
               <Button
                 key={category.id}
-                variant={selectedCategory === category.id ? "default" : "outline"}
+                variant={selectedCategory === category.name ? "default" : "outline"}
                 className="whitespace-nowrap rounded-full"
-                onClick={() => setSelectedCategory(category.id)}
+                onClick={() => setSelectedCategory(category.name)}
               >
                 {category.name}
               </Button>
@@ -134,14 +121,14 @@ const Index = () => {
 
             <div>
               <h3 className="text-lg font-semibold mb-6">
-                {selectedCategory ? categories?.find(c => c.id === selectedCategory)?.name || "All Items" : "All Items"}
+                {selectedCategory || "All Items"}
               </h3>
               <MenuSection 
                 onAddToCart={(item) => {
                   setSelectedProduct(item);
                   setIsDialogOpen(true);
                 }}
-                categoryId={selectedCategory}
+                category={selectedCategory}
               />
             </div>
           </div>

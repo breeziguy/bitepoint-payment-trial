@@ -4,21 +4,21 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface MenuSectionProps {
   onAddToCart: (item: MenuItem) => void;
-  categoryId?: string | null;
+  category?: string;
   featured?: boolean;
 }
 
-const MenuSection = ({ onAddToCart, categoryId, featured }: MenuSectionProps) => {
+const MenuSection = ({ onAddToCart, category, featured }: MenuSectionProps) => {
   const { data: menuItems, isLoading } = useQuery({
-    queryKey: ['menu-items', categoryId, featured],
+    queryKey: ['menu-items', category, featured],
     queryFn: async () => {
       let query = supabase
         .from('menu_items')
-        .select('*, categories(*)')
+        .select('*')
         .eq('is_available', true);
       
-      if (categoryId) {
-        query = query.eq('category_id', categoryId);
+      if (category) {
+        query = query.eq('category', category);
       }
       
       if (featured) {
@@ -68,9 +68,6 @@ const MenuSection = ({ onAddToCart, categoryId, featured }: MenuSectionProps) =>
               </button>
             </div>
             <p className="text-gray-500 text-sm mt-2 line-clamp-2">{item.description}</p>
-            {item.categories && (
-              <p className="text-xs text-gray-400 mt-1">{item.categories.name}</p>
-            )}
           </div>
         </div>
       ))}
