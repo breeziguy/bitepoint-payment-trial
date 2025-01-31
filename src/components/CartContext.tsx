@@ -1,5 +1,11 @@
 import { createContext, useState, useCallback } from "react";
 
+interface CartAddon {
+  id: string;
+  name: string;
+  price: number;
+}
+
 interface CartItem {
   id: string;
   name: string;
@@ -8,6 +14,7 @@ interface CartItem {
   description?: string;
   category?: string;
   image?: string;
+  addons?: CartAddon[];
 }
 
 interface CartContextType {
@@ -31,10 +38,16 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
   const addToCart = useCallback((newItem: CartItem) => {
     setItems((prevItems) => {
-      const existingItem = prevItems.find((item) => item.id === newItem.id);
+      const existingItem = prevItems.find((item) => {
+        // Check if the item and its addons match
+        const sameAddons = JSON.stringify(item.addons) === JSON.stringify(newItem.addons);
+        return item.id === newItem.id && sameAddons;
+      });
+
       if (existingItem) {
         return prevItems.map((item) =>
-          item.id === newItem.id 
+          item.id === newItem.id && 
+          JSON.stringify(item.addons) === JSON.stringify(newItem.addons)
             ? { ...item, quantity: item.quantity + newItem.quantity }
             : item
         );
