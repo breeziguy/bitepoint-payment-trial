@@ -40,7 +40,16 @@ export default function AdminSettings() {
         .select("*")
         .maybeSingle();
       if (error && error.code !== "PGRST116") throw error;
-      return data;
+      return data || {
+        store_name: "Food Frenzy",
+        store_address: "123 Main Street",
+        store_city: "City",
+        store_state: "State",
+        primary_color: "#9b87f5",
+        hero_title: "Delicious food, delivered to you",
+        hero_subtitle: "Order your favorite meals from the best restaurants",
+        hero_text_color: "#000000"
+      };
     },
   });
 
@@ -62,7 +71,14 @@ export default function AdminSettings() {
           .eq("id", storeSettings.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("store_settings").insert([settings]);
+        const { error } = await supabase
+          .from("store_settings")
+          .insert([{
+            ...settings,
+            store_address: settings.store_address || "123 Main Street",
+            store_city: settings.store_city || "City",
+            store_state: settings.store_state || "State"
+          }]);
         if (error) throw error;
       }
     },
@@ -128,14 +144,14 @@ export default function AdminSettings() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     updateStoreMutation.mutate({
-      store_name: formData.get("store_name") as string,
-      store_address: formData.get("address") as string,
-      store_city: formData.get("city") as string,
-      store_state: formData.get("state") as string,
-      primary_color: formData.get("primary_color") as string,
-      hero_title: formData.get("hero_title") as string,
-      hero_subtitle: formData.get("hero_subtitle") as string,
-      hero_text_color: formData.get("hero_text_color") as string,
+      store_name: formData.get("store_name") as string || "Food Frenzy",
+      store_address: formData.get("address") as string || "123 Main Street",
+      store_city: formData.get("city") as string || "City",
+      store_state: formData.get("state") as string || "State",
+      primary_color: formData.get("primary_color") as string || "#9b87f5",
+      hero_title: formData.get("hero_title") as string || "Delicious food, delivered to you",
+      hero_subtitle: formData.get("hero_subtitle") as string || "Order your favorite meals from the best restaurants",
+      hero_text_color: formData.get("hero_text_color") as string || "#000000",
     });
   };
 
