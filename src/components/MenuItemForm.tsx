@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { X, Upload, Image } from "lucide-react";
@@ -25,6 +26,7 @@ interface MenuItemFormProps {
     description: string;
     category: string;
     image_url?: string;
+    is_featured?: boolean;
   };
 }
 
@@ -32,12 +34,14 @@ const MenuItemForm = ({ onClose, onSuccess, initialData }: MenuItemFormProps) =>
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
     price: initialData?.price || 0,
     description: initialData?.description || "",
     category: initialData?.category || "",
     image_url: initialData?.image_url || "",
+    is_featured: initialData?.is_featured || false,
   });
 
   const { data: categories } = useQuery({
@@ -52,6 +56,37 @@ const MenuItemForm = ({ onClose, onSuccess, initialData }: MenuItemFormProps) =>
       return data;
     },
   });
+
+  const { data: addons } = useQuery({
+    queryKey: ['addons'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('menu_items')
+        .select('*')
+        .eq('category', 'addon')
+        .order('name');
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Fetch existing addons for this menu item if editing
+  useEffect(() => {
+    if (initialData?.id) {
+      const fetchExistingAddons = async () => {
+        const { data, error } = await supabase
+          .from('menu_addons')
+          .select('addon_item_id')
+          .eq('menu_item_id', initialData.id);
+        
+        if (!error && data) {
+          setSelectedAddons(data.map(item => item.addon_item_id));
+        }
+      };
+      fetchExistingAddons();
+    }
+  }, [initialData?.id]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -103,19 +138,58 @@ const MenuItemForm = ({ onClose, onSuccess, initialData }: MenuItemFormProps) =>
       };
 
       if (initialData?.id) {
+        // Update existing menu item
         const { error } = await supabase
           .from("menu_items")
           .update(data)
           .eq("id", initialData.id);
 
         if (error) throw error;
+
+        // Update addons
+        await supabase
+          .from("menu_addons")
+          .delete()
+          .eq("menu_item_id", initialData.id);
+
+        if (selectedAddons.length > 0) {
+          const addonRecords = selectedAddons.map(addonId => ({
+            menu_item_id: initialData.id,
+            addon_item_id: addonId
+          }));
+
+          const { error: addonError } = await supabase
+            .from("menu_addons")
+            .insert(addonRecords);
+
+          if (addonError) throw addonError;
+        }
+
         toast({ title: "Menu item updated successfully" });
       } else {
-        const { error } = await supabase
+        // Create new menu item
+        const { data: newItem, error } = await supabase
           .from("menu_items")
-          .insert([data]);
+          .insert([data])
+          .select()
+          .single();
         
         if (error) throw error;
+
+        // Insert addons for new menu item
+        if (selectedAddons.length > 0 && newItem) {
+          const addonRecords = selectedAddons.map(addonId => ({
+            menu_item_id: newItem.id,
+            addon_item_id: addonId
+          }));
+
+          const { error: addonError } = await supabase
+            .from("menu_addons")
+            .insert(addonRecords);
+
+          if (addonError) throw addonError;
+        }
+        
         toast({ title: "Menu item created successfully" });
       }
 
@@ -135,7 +209,7 @@ const MenuItemForm = ({ onClose, onSuccess, initialData }: MenuItemFormProps) =>
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-md w-full p-6 relative">
+      <div className="bg-white rounded-lg max-w-md w-full p-6 relative max-h-[90vh] overflow-y-auto">
         <Button
           variant="ghost"
           size="icon"
@@ -213,6 +287,46 @@ const MenuItemForm = ({ onClose, onSuccess, initialData }: MenuItemFormProps) =>
               required
             />
           </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="is_featured"
+              checked={formData.is_featured}
+              onCheckedChange={(checked) =>
+                setFormData((prev) => ({ ...prev, is_featured: checked as boolean }))
+              }
+            />
+            <Label htmlFor="is_featured">Featured Item</Label>
+          </div>
+
+          {formData.category !== 'addon' && (
+            <div className="space-y-2">
+              <Label>Available Addons</Label>
+              <div className="space-y-2 border rounded-md p-3">
+                {addons?.map((addon) => (
+                  <div key={addon.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`addon-${addon.id}`}
+                      checked={selectedAddons.includes(addon.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedAddons([...selectedAddons, addon.id]);
+                        } else {
+                          setSelectedAddons(selectedAddons.filter(id => id !== addon.id));
+                        }
+                      }}
+                    />
+                    <Label htmlFor={`addon-${addon.id}`}>
+                      {addon.name} - ₦{addon.price}
+                    </Label>
+                  </div>
+                ))}
+                {(!addons || addons.length === 0) && (
+                  <p className="text-sm text-gray-500">No addons available</p>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="image">Image</Label>
