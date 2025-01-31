@@ -40,16 +40,29 @@ export default function AdminSettings() {
         .select("*")
         .maybeSingle();
       if (error && error.code !== "PGRST116") throw error;
-      return data || {
-        store_name: "Food Frenzy",
-        store_address: "123 Main Street",
-        store_city: "City",
-        store_state: "State",
-        primary_color: "#9b87f5",
-        hero_title: "Delicious food, delivered to you",
-        hero_subtitle: "Order your favorite meals from the best restaurants",
-        hero_text_color: "#000000"
-      };
+      
+      // If no data exists, create a new store settings record
+      if (!data) {
+        const { data: newSettings, error: insertError } = await supabase
+          .from("store_settings")
+          .insert([{
+            store_name: "Food Frenzy",
+            store_address: "123 Main Street",
+            store_city: "City",
+            store_state: "State",
+            primary_color: "#9b87f5",
+            hero_title: "Delicious food, delivered to you",
+            hero_subtitle: "Order your favorite meals from the best restaurants",
+            hero_text_color: "#000000"
+          }])
+          .select()
+          .single();
+          
+        if (insertError) throw insertError;
+        return newSettings;
+      }
+      
+      return data;
     },
   });
 
