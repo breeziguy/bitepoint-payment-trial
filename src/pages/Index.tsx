@@ -5,67 +5,69 @@ import MenuSection from "@/components/MenuSection";
 import Cart from "@/components/Cart";
 import { CartProvider, CartContext } from "@/components/CartContext";
 import ProductDialog from "@/components/ProductDialog";
-import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
 
 const Index = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState<MenuItem | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("home");
-  const { toast } = useToast();
 
   return (
     <CartProvider>
-      <div className="min-h-screen bg-white">
-        <header className="bg-[#FEF7CD] text-black p-4 sticky top-0 z-50">
-          <div className="container mx-auto flex justify-between items-center">
-            <h1 className="text-2xl font-bold">Food Frenzy</h1>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <header className="bg-white shadow-sm sticky top-0 z-50">
+          <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+            <h1 className="text-xl font-bold">Food Frenzy</h1>
             <CartButton onOpen={() => setIsCartOpen(true)} />
           </div>
         </header>
 
-        <main className="container mx-auto p-4 max-w-4xl">
-          {/* Navigation Tabs */}
-          <div className="w-full mb-6">
-            <div className="grid w-full grid-cols-2 max-w-[200px] mx-auto">
-              <button
-                className={`py-2 ${activeTab === "home" ? "border-b-2 border-[#FEF7CD]" : ""}`}
-                onClick={() => setActiveTab("home")}
-              >
-                Home
-              </button>
-              <button
-                className={`py-2 ${activeTab === "search" ? "border-b-2 border-[#FEF7CD]" : ""}`}
-                onClick={() => setActiveTab("search")}
-              >
-                Search
-              </button>
-            </div>
+        {/* Hero Section */}
+        <div className="bg-[#FEF7CD] py-12">
+          <div className="container mx-auto px-4">
+            <h2 className="text-4xl font-bold mb-4">Delicious food,<br />delivered to you</h2>
+            <p className="text-gray-700 mb-6">Order your favorite meals from the best restaurants</p>
+            <Button className="bg-black text-white hover:bg-black/90">Order Now</Button>
           </div>
+        </div>
 
-          {activeTab === "home" && (
-            <>
-              <div className="mb-8">
-                <h2 className="text-xl font-semibold mb-4">Featured Items</h2>
-                <MenuSection 
-                  onAddToCart={(item) => {
-                    setSelectedProduct(item);
-                    setIsDialogOpen(true);
-                  }} 
-                />
-              </div>
-            </>
-          )}
+        {/* Categories */}
+        <div className="container mx-auto px-4 py-8">
+          <h3 className="text-lg font-semibold mb-4">Categories</h3>
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+            {["All", "Main Dishes", "Beverages", "Desserts", "Snacks"].map((category) => (
+              <Button
+                key={category}
+                variant="outline"
+                className="whitespace-nowrap rounded-full"
+              >
+                {category}
+              </Button>
+            ))}
+          </div>
+        </div>
 
-          {activeTab === "search" && (
-            <div className="p-4">
-              <SearchBar />
-            </div>
-          )}
-        </main>
+        {/* Featured Items */}
+        <div className="container mx-auto px-4 py-8">
+          <h3 className="text-lg font-semibold mb-6">Featured Items</h3>
+          <MenuSection 
+            onAddToCart={(item) => {
+              setSelectedProduct(item);
+              setIsDialogOpen(true);
+            }} 
+          />
+        </div>
+
+        {/* Popular Items */}
+        <div className="container mx-auto px-4 py-8">
+          <h3 className="text-lg font-semibold mb-6">Popular Right Now</h3>
+          <MenuSection 
+            onAddToCart={(item) => {
+              setSelectedProduct(item);
+              setIsDialogOpen(true);
+            }} 
+          />
+        </div>
 
         <Cart 
           open={isCartOpen} 
@@ -87,35 +89,23 @@ const Index = () => {
   );
 };
 
-const CartButton = ({ onOpen }) => {
+const CartButton = ({ onOpen }: { onOpen: () => void }) => {
   const { items } = useContext(CartContext);
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <Button 
-      variant="ghost" 
-      className="text-white hover:text-white/80"
+      variant="outline"
+      className="relative"
       onClick={onOpen}
     >
-      <ShoppingCart className="mr-2" />
+      <ShoppingCart className="h-5 w-5" />
       {totalItems > 0 && (
-        <span className="bg-[#FF9F1C] rounded-full px-2 py-1 text-xs">
+        <span className="absolute -top-2 -right-2 bg-black text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
           {totalItems}
         </span>
       )}
     </Button>
-  );
-};
-
-const SearchBar = () => {
-  return (
-    <div className="relative">
-      <input
-        type="text"
-        placeholder="Search for dishes..."
-        className="w-full p-3 border rounded-lg pl-10"
-      />
-    </div>
   );
 };
 
