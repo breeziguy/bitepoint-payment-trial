@@ -1,56 +1,46 @@
 import { Plus } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MenuSectionProps {
   onAddToCart: (item: MenuItem) => void;
+  category?: string;
 }
 
-const menuItems: MenuItem[] = [
-  {
-    id: "1",
-    name: "Mile High Turkey",
-    description: "Turkey and Provolone Cheese on a White Roll Each hand-crafted deli sub is piled high with freshly sliced meats",
-    price: 6.50,
-    category: "Sandwiches",
-    image: "/lovable-uploads/d0949cf0-7c05-4a55-b4a5-58a02a0c7a6d.png"
-  },
-  {
-    id: "2",
-    name: "Italian Sub",
-    description: "Ham, prosciutto, capicola, Genoa salami, and provolone cheese on a white roll. Each hand-crafted deli sub is piled high with freshly sliced meats",
-    price: 6.50,
-    category: "Sandwiches",
-    image: "/lovable-uploads/d0949cf0-7c05-4a55-b4a5-58a02a0c7a6d.png"
-  },
-  {
-    id: "3",
-    name: "American Club",
-    description: "Ham, turkey, bacon, and provolone cheese on a white roll. Each hand-crafted deli sub is piled high with freshly sliced meats",
-    price: 6.50,
-    category: "Popular",
-    image: "/lovable-uploads/d0949cf0-7c05-4a55-b4a5-58a02a0c7a6d.png"
-  },
-  {
-    id: "4",
-    name: "Deluxe Club",
-    description: "Turkey, roast beef, bacon, and provolone cheese on a white roll. Each hand-crafted deli sub is piled high with freshly sliced meats",
-    price: 6.50,
-    category: "Sandwiches",
-    image: "/lovable-uploads/d0949cf0-7c05-4a55-b4a5-58a02a0c7a6d.png"
-  }
-];
+const MenuSection = ({ onAddToCart, category }: MenuSectionProps) => {
+  const { data: menuItems, isLoading } = useQuery({
+    queryKey: ['menu-items', category],
+    queryFn: async () => {
+      let query = supabase
+        .from('menu_items')
+        .select('*')
+        .eq('is_available', true);
+      
+      if (category) {
+        query = query.eq('category', category);
+      }
+      
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+  });
 
-const MenuSection = ({ onAddToCart }: MenuSectionProps) => {
   const formatPrice = (price: number) => {
     return `₦${(price * 1000).toLocaleString()}`;
   };
 
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="space-y-4">
-      {menuItems.map((item) => (
+      {menuItems?.map((item) => (
         <div key={item.id} className="flex items-start space-x-4 p-4 bg-white rounded-lg">
           <div className="w-24 h-24 relative flex-shrink-0">
             <img
-              src={item.image}
+              src={item.image_url || '/placeholder.svg'}
               alt={item.name}
               className="w-full h-full object-cover rounded-lg"
             />
@@ -60,9 +50,6 @@ const MenuSection = ({ onAddToCart }: MenuSectionProps) => {
               <div>
                 <h3 className="font-semibold text-lg">{item.name}</h3>
                 <p className="text-gray-600 text-sm mt-1">{formatPrice(item.price)}</p>
-                {item.category === "Popular" && (
-                  <span className="text-green-600 text-sm">Popular</span>
-                )}
               </div>
               <button
                 onClick={() => onAddToCart(item)}

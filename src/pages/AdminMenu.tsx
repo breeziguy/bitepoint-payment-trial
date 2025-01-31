@@ -10,8 +10,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Edit, Trash2, Image, Plus } from "lucide-react";
+import { Edit, Trash2, Image, Plus, FolderPlus } from "lucide-react";
 import MenuItemForm from "@/components/MenuItemForm";
+import CategoryForm from "@/components/CategoryForm";
 import { useToast } from "@/components/ui/use-toast";
 import {
   AlertDialog,
@@ -26,6 +27,7 @@ import {
 
 export default function AdminMenu() {
   const [showForm, setShowForm] = useState(false);
+  const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [deleteItem, setDeleteItem] = useState<any>(null);
   const { toast } = useToast();
@@ -66,34 +68,27 @@ export default function AdminMenu() {
     }
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN'
-    }).format(price * 1000);
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Menu Items</h1>
-        <Button 
-          className="flex items-center gap-2"
-          onClick={() => {
-            setEditingItem(null);
-            setShowForm(true);
-          }}
-        >
-          <Plus className="h-4 w-4" /> Add Menu Item
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            className="flex items-center gap-2"
+            onClick={() => setShowCategoryForm(true)}
+          >
+            <FolderPlus className="h-4 w-4" /> Manage Categories
+          </Button>
+          <Button 
+            className="flex items-center gap-2"
+            onClick={() => {
+              setEditingItem(null);
+              setShowForm(true);
+            }}
+          >
+            <Plus className="h-4 w-4" /> Add Menu Item
+          </Button>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow">
@@ -173,6 +168,15 @@ export default function AdminMenu() {
           }}
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: ['menu-items'] });
+          }}
+        />
+      )}
+
+      {showCategoryForm && (
+        <CategoryForm
+          onClose={() => setShowCategoryForm(false)}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['categories'] });
           }}
         />
       )}
