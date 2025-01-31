@@ -9,9 +9,28 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AdminOrders() {
-  const { data: orders, isLoading } = useQuery({
+  const { toast } = useToast();
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+
+  const { data: orders, isLoading, refetch } = useQuery({
     queryKey: ['orders'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -29,6 +48,32 @@ export default function AdminOrders() {
       style: 'currency',
       currency: 'NGN'
     }).format(price * 1000);
+  };
+
+  const updateOrderStatus = async (orderId: string, status: string, type: 'payment' | 'delivery') => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({
+          [type === 'payment' ? 'payment_status' : 'delivery_status']: status
+        })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Status updated",
+        description: `Order ${type} status has been updated to ${status}`,
+      });
+
+      refetch();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   if (isLoading) {
@@ -54,9 +99,10 @@ export default function AdminOrders() {
                 <TableHead>Order ID</TableHead>
                 <TableHead>Customer</TableHead>
                 <TableHead>Phone</TableHead>
-                <TableHead>Items</TableHead>
                 <TableHead>Total</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Payment Status</TableHead>
+                <TableHead>Delivery Status</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -67,18 +113,46 @@ export default function AdminOrders() {
                   </TableCell>
                   <TableCell>{order.customer_name}</TableCell>
                   <TableCell>{order.customer_phone}</TableCell>
-                  <TableCell>{order.order_items?.length || 0} items</TableCell>
                   <TableCell>{formatPrice(order.total_amount)}</TableCell>
                   <TableCell>
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      order.status === 'completed'
-                        ? 'bg-green-100 text-green-800'
-                        : order.status === 'pending'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                    </span>
+                    <Select
+                      value={order.payment_status}
+                      onValueChange={(value) => updateOrderStatus(order.id, value, 'payment')}
+                    >
+                      <SelectTrigger className="w-[130px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="paid">Paid</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    <Select
+                      value={order.delivery_status}
+                      onValueChange={(value) => updateOrderStatus(order.id, value, 'delivery')}
+                      disabled={order.payment_status !== 'paid'}
+                    >
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
+                        <SelectItem value="delivered">Delivered</SelectItem>
+                        <SelectItem value="picked_up">Picked Up</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      onClick={() => setSelectedOrder(order)}
+                    >
+                      View Details
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -86,6 +160,62 @@ export default function AdminOrders() {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Order Details</DialogTitle>
+          </DialogHeader>
+          {selectedOrder && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="font-semibold">Customer Information</h3>
+                  <p>Name: {selectedOrder.customer_name}</p>
+                  <p>Phone: {selectedOrder.customer_phone}</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold">Order Status</h3>
+                  <p>Payment: {selectedOrder.payment_status}</p>
+                  <p>Delivery: {selectedOrder.delivery_status}</p>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2">Order Items</h3>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Item</TableHead>
+                      <TableHead>Quantity</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Total</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {selectedOrder.order_items?.map((item: any) => (
+                      <TableRow key={item.id}>
+                        <TableCell>{item.menu_items?.name}</TableCell>
+                        <TableCell>{item.quantity}</TableCell>
+                        <TableCell>{formatPrice(item.price_at_time)}</TableCell>
+                        <TableCell>
+                          {formatPrice(item.price_at_time * item.quantity)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              <div className="text-right">
+                <p className="font-semibold">
+                  Total Amount: {formatPrice(selectedOrder.total_amount)}
+                </p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

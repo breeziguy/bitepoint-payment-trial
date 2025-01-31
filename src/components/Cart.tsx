@@ -35,7 +35,10 @@ const Cart = ({ open, onClose }: CartProps) => {
   const finalTotal = total + tax;
 
   const formatPrice = (price: number) => {
-    return `$${price.toFixed(2)}`;
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN'
+    }).format(price * 1000);
   };
 
   const handleCheckout = async () => {

@@ -18,7 +18,10 @@ const OrderSummary = ({
   deliveryType,
 }: OrderSummaryProps) => {
   const formatPrice = (price: number) => {
-    return `$${price.toFixed(2)}`;
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN'
+    }).format(price * 1000);
   };
 
   return (
