@@ -33,6 +33,30 @@ export type Database = {
         }
         Relationships: []
       }
+      delivery_zones: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          price: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       menu_addons: {
         Row: {
           addon_item_id: string | null
@@ -167,6 +191,7 @@ export type Database = {
           customer_name: string
           customer_phone: string
           delivery_status: string | null
+          delivery_zone_id: string | null
           id: string
           payment_status: string | null
           status: string
@@ -178,6 +203,7 @@ export type Database = {
           customer_name: string
           customer_phone: string
           delivery_status?: string | null
+          delivery_zone_id?: string | null
           id?: string
           payment_status?: string | null
           status?: string
@@ -189,10 +215,46 @@ export type Database = {
           customer_name?: string
           customer_phone?: string
           delivery_status?: string | null
+          delivery_zone_id?: string | null
           id?: string
           payment_status?: string | null
           status?: string
           total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_delivery_zone_id_fkey"
+            columns: ["delivery_zone_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_settings: {
+        Row: {
+          created_at: string
+          id: string
+          store_address: string
+          store_city: string
+          store_state: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          store_address: string
+          store_city: string
+          store_state: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          store_address?: string
+          store_city?: string
+          store_state?: string
           updated_at?: string
         }
         Relationships: []

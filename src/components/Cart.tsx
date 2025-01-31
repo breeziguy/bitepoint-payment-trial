@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { CartContext } from "./CartContext";
 import { useToast } from "@/hooks/use-toast";
 import CheckoutForm, { CheckoutFormData } from "./CheckoutForm";
@@ -26,13 +26,29 @@ const Cart = ({ open, onClose }: CartProps) => {
     whatsapp: "",
     deliveryType: "pickup",
   });
+  const [selectedZonePrice, setSelectedZonePrice] = useState(0);
   
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const others = 1; // Additional charges
-  const deliveryFee = checkoutForm.deliveryType === "delivery" ? 5 : 0;
-  const total = subtotal + others + deliveryFee;
-  const tax = total * 0.03;
-  const finalTotal = total + tax;
+  const deliveryFee = checkoutForm.deliveryType === "delivery" ? selectedZonePrice : 0;
+  const total = subtotal + deliveryFee;
+
+  useEffect(() => {
+    if (checkoutForm.deliveryZoneId) {
+      const fetchZonePrice = async () => {
+        const { data } = await supabase
+          .from("delivery_zones")
+          .select("price")
+          .eq("id", checkoutForm.deliveryZoneId)
+          .single();
+        if (data) {
+          setSelectedZonePrice(data.price);
+        }
+      };
+      fetchZonePrice();
+    } else {
+      setSelectedZonePrice(0);
+    }
+  }, [checkoutForm.deliveryZoneId]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -53,11 +69,11 @@ const Cart = ({ open, onClose }: CartProps) => {
 
     if (
       checkoutForm.deliveryType === "delivery" &&
-      (!checkoutForm.streetAddress || !checkoutForm.city || !checkoutForm.postalCode)
+      (!checkoutForm.streetAddress || !checkoutForm.city || !checkoutForm.postalCode || !checkoutForm.deliveryZoneId)
     ) {
       toast({
         title: "Error",
-        description: "Please provide complete delivery address",
+        description: "Please provide complete delivery information",
         variant: "destructive",
       });
       return;
@@ -71,8 +87,9 @@ const Cart = ({ open, onClose }: CartProps) => {
           {
             customer_name: checkoutForm.name,
             customer_phone: checkoutForm.whatsapp,
-            total_amount: finalTotal,
+            total_amount: total,
             status: "pending",
+            delivery_zone_id: checkoutForm.deliveryZoneId,
           },
         ])
         .select()
@@ -108,11 +125,8 @@ ${items
 
 Order Summary:
 Items: ${formatPrice(subtotal)}
-Others: ${formatPrice(others)}
 ${checkoutForm.deliveryType === "delivery" ? `Delivery: ${formatPrice(deliveryFee)}\n` : ""}
-Subtotal: ${formatPrice(total)}
-Tax (3%): ${formatPrice(tax)}
-Total: ${formatPrice(finalTotal)}
+Total: ${formatPrice(total)}
 
 Customer Details:
 Name: ${checkoutForm.name}
@@ -202,7 +216,7 @@ ${checkoutForm.postalCode}`
                 <div className="space-y-4 mt-auto">
                   <div className="flex justify-between mb-4">
                     <span className="font-medium">Total</span>
-                    <span className="font-medium">{formatPrice(finalTotal)}</span>
+                    <span className="font-medium">{formatPrice(total)}</span>
                   </div>
                   <Button
                     className="w-full bg-[#FEF7CD] hover:bg-[#FEF7CD]/90 text-black"
@@ -221,11 +235,8 @@ ${checkoutForm.postalCode}`
               }
               onSubmit={handleCheckout}
               subtotal={subtotal}
-              others={others}
               deliveryFee={deliveryFee}
               total={total}
-              tax={tax}
-              finalTotal={finalTotal}
             />
           )}
         </div>

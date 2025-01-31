@@ -1,8 +1,17 @@
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import OrderSummary from "./OrderSummary";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface CheckoutFormData {
   name: string;
@@ -12,6 +21,13 @@ export interface CheckoutFormData {
   unitNumber?: string;
   city?: string;
   postalCode?: string;
+  deliveryZoneId?: string;
+}
+
+interface DeliveryZone {
+  id: string;
+  name: string;
+  price: number;
 }
 
 interface CheckoutFormProps {
@@ -19,11 +35,8 @@ interface CheckoutFormProps {
   onFormChange: (data: Partial<CheckoutFormData>) => void;
   onSubmit: () => void;
   subtotal: number;
-  others: number;
   deliveryFee: number;
   total: number;
-  tax: number;
-  finalTotal: number;
 }
 
 const CheckoutForm = ({
@@ -31,12 +44,24 @@ const CheckoutForm = ({
   onFormChange,
   onSubmit,
   subtotal,
-  others,
   deliveryFee,
   total,
-  tax,
-  finalTotal,
 }: CheckoutFormProps) => {
+  const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>([]);
+
+  useEffect(() => {
+    const fetchDeliveryZones = async () => {
+      const { data } = await supabase
+        .from("delivery_zones")
+        .select("*")
+        .order("name");
+      if (data) {
+        setDeliveryZones(data);
+      }
+    };
+    fetchDeliveryZones();
+  }, []);
+
   return (
     <div className="space-y-6">
       <div className="space-y-4">
@@ -63,7 +88,7 @@ const CheckoutForm = ({
           <RadioGroup
             value={formData.deliveryType}
             onValueChange={(value: "pickup" | "delivery") =>
-              onFormChange({ deliveryType: value })
+              onFormChange({ deliveryType: value, deliveryZoneId: undefined })
             }
           >
             <div className="flex items-center space-x-2">
@@ -79,6 +104,25 @@ const CheckoutForm = ({
 
         {formData.deliveryType === "delivery" && (
           <div className="space-y-4 border-t pt-4">
+            <div className="space-y-2">
+              <Label>Delivery Zone</Label>
+              <Select
+                value={formData.deliveryZoneId}
+                onValueChange={(value) => onFormChange({ deliveryZoneId: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select your area" />
+                </SelectTrigger>
+                <SelectContent>
+                  {deliveryZones.map((zone) => (
+                    <SelectItem key={zone.id} value={zone.id}>
+                      {zone.name} - ₦{zone.price.toLocaleString()}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
             <div className="space-y-2">
               <Label>Street address</Label>
               <Input
@@ -116,11 +160,8 @@ const CheckoutForm = ({
 
         <OrderSummary
           subtotal={subtotal}
-          others={others}
           deliveryFee={deliveryFee}
           total={total}
-          tax={tax}
-          finalTotal={finalTotal}
           deliveryType={formData.deliveryType}
         />
       </div>
