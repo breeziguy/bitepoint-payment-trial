@@ -7,7 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { useContext, useState, useEffect } from "react";
-import { CartContext } from "./CartContext";
+import { CartContext, CartItem } from "./CartContext";  // Added CartItem import here
 import { useToast } from "@/hooks/use-toast";
 import CheckoutForm, { CheckoutFormData } from "./CheckoutForm";
 import { supabase } from "@/integrations/supabase/client";
