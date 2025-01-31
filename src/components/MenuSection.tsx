@@ -63,7 +63,11 @@ const MenuSection = ({ onAddToCart, category, featured }: MenuSectionProps) => {
   return (
     <div className="space-y-4">
       {menuItems?.map((item) => (
-        <div key={item.id} className="flex items-start space-x-4 p-4 bg-white rounded-lg">
+        <div 
+          key={item.id} 
+          className="flex items-start space-x-4 p-4 bg-white rounded-lg cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => onAddToCart(item)}
+        >
           <div className="w-24 h-24 relative flex-shrink-0">
             <img
               src={item.image_url || '/placeholder.svg'}
@@ -77,12 +81,15 @@ const MenuSection = ({ onAddToCart, category, featured }: MenuSectionProps) => {
                 <h3 className="font-semibold text-lg">{item.name}</h3>
                 <p className="text-gray-600 text-sm mt-1">{formatPrice(item.price)}</p>
               </div>
-              <button
-                onClick={() => onAddToCart(item)}
+              <div 
                 className="p-2 rounded-full bg-white shadow-md hover:shadow-lg transition-shadow"
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent triggering parent onClick
+                  onAddToCart(item);
+                }}
               >
                 <Plus className="h-5 w-5" />
-              </button>
+              </div>
             </div>
             <p className="text-gray-500 text-sm mt-2 line-clamp-2">{item.description}</p>
           </div>
