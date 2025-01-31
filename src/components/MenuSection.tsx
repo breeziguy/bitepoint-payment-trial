@@ -5,11 +5,12 @@ import { supabase } from "@/integrations/supabase/client";
 interface MenuSectionProps {
   onAddToCart: (item: MenuItem) => void;
   category?: string;
+  featured?: boolean;
 }
 
-const MenuSection = ({ onAddToCart, category }: MenuSectionProps) => {
+const MenuSection = ({ onAddToCart, category, featured }: MenuSectionProps) => {
   const { data: menuItems, isLoading } = useQuery({
-    queryKey: ['menu-items', category],
+    queryKey: ['menu-items', category, featured],
     queryFn: async () => {
       let query = supabase
         .from('menu_items')
@@ -18,6 +19,10 @@ const MenuSection = ({ onAddToCart, category }: MenuSectionProps) => {
       
       if (category) {
         query = query.eq('category', category);
+      }
+      
+      if (featured) {
+        query = query.eq('is_featured', true);
       }
       
       const { data, error } = await query;
@@ -32,6 +37,10 @@ const MenuSection = ({ onAddToCart, category }: MenuSectionProps) => {
 
   if (isLoading) {
     return <div>Loading...</div>;
+  }
+
+  if (!menuItems?.length) {
+    return <div className="text-gray-500">No items found</div>;
   }
 
   return (

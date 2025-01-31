@@ -102,6 +102,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_available: boolean | null
+          is_featured: boolean | null
           name: string
           price: number
           updated_at: string
@@ -114,6 +115,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_available?: boolean | null
+          is_featured?: boolean | null
           name: string
           price: number
           updated_at?: string
@@ -126,6 +128,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_available?: boolean | null
+          is_featured?: boolean | null
           name?: string
           price?: number
           updated_at?: string
@@ -235,25 +238,40 @@ export type Database = {
       store_settings: {
         Row: {
           created_at: string
+          hero_subtitle: string | null
+          hero_text_color: string | null
+          hero_title: string | null
           id: string
+          primary_color: string | null
           store_address: string
           store_city: string
+          store_name: string
           store_state: string
           updated_at: string
         }
         Insert: {
           created_at?: string
+          hero_subtitle?: string | null
+          hero_text_color?: string | null
+          hero_title?: string | null
           id?: string
+          primary_color?: string | null
           store_address: string
           store_city: string
+          store_name?: string
           store_state: string
           updated_at?: string
         }
         Update: {
           created_at?: string
+          hero_subtitle?: string | null
+          hero_text_color?: string | null
+          hero_title?: string | null
           id?: string
+          primary_color?: string | null
           store_address?: string
           store_city?: string
+          store_name?: string
           store_state?: string
           updated_at?: string
         }

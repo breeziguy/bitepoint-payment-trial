@@ -7,11 +7,40 @@ import { CartProvider, CartContext } from "@/components/CartContext";
 import ProductDialog from "@/components/ProductDialog";
 import FloatingCartBar from "@/components/FloatingCartBar";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<MenuItem | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  const { data: storeSettings } = useQuery({
+    queryKey: ['store-settings'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('store_settings')
+        .select('*')
+        .maybeSingle();
+      
+      if (error && error.code !== "PGRST116") throw error;
+      return data;
+    },
+  });
+
+  const { data: categories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('name');
+      
+      if (error) throw error;
+      return data;
+    },
+  });
 
   return (
     <CartProvider>
@@ -19,7 +48,7 @@ const Index = () => {
         {/* Header */}
         <header className="bg-white shadow-sm sticky top-0 z-50">
           <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-            <h1 className="text-xl font-bold">Food Frenzy</h1>
+            <h1 className="text-xl font-bold">{storeSettings?.store_name || 'Food Frenzy'}</h1>
             <div className="flex items-center gap-4">
               {import.meta.env.DEV && (
                 <Button variant="outline" asChild>
@@ -32,11 +61,22 @@ const Index = () => {
         </header>
 
         {/* Hero Section */}
-        <div className="bg-[#FEF7CD] py-12">
+        <div 
+          className="py-12"
+          style={{ 
+            backgroundColor: storeSettings?.primary_color || '#FEF7CD',
+            color: storeSettings?.hero_text_color || '#000000'
+          }}
+        >
           <div className="container mx-auto px-4">
-            <h2 className="text-4xl font-bold mb-4">Delicious food,<br />delivered to you</h2>
-            <p className="text-gray-700 mb-6">Order your favorite meals from the best restaurants</p>
-            <Button className="bg-black text-white hover:bg-black/90">Order Now</Button>
+            <h2 className="text-4xl font-bold mb-4">{storeSettings?.hero_title || 'Delicious food,\ndelivered to you'}</h2>
+            <p className="mb-6">{storeSettings?.hero_subtitle || 'Order your favorite meals from the best restaurants'}</p>
+            <Button 
+              className="text-white hover:opacity-90"
+              style={{ backgroundColor: storeSettings?.hero_text_color || '#000000' }}
+            >
+              Order Now
+            </Button>
           </div>
         </div>
 
@@ -44,13 +84,22 @@ const Index = () => {
         <div className="container mx-auto px-4 py-8">
           <h3 className="text-lg font-semibold mb-4">Categories</h3>
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-            {["All", "Main Dishes", "Beverages", "Desserts", "Snacks"].map((category) => (
+            <Button
+              key="all"
+              variant={selectedCategory === null ? "default" : "outline"}
+              className="whitespace-nowrap rounded-full"
+              onClick={() => setSelectedCategory(null)}
+            >
+              All
+            </Button>
+            {categories?.map((category) => (
               <Button
-                key={category}
-                variant="outline"
+                key={category.id}
+                variant={selectedCategory === category.name ? "default" : "outline"}
                 className="whitespace-nowrap rounded-full"
+                onClick={() => setSelectedCategory(category.name)}
               >
-                {category}
+                {category.name}
               </Button>
             ))}
           </div>
@@ -65,17 +114,21 @@ const Index = () => {
                 onAddToCart={(item) => {
                   setSelectedProduct(item);
                   setIsDialogOpen(true);
-                }} 
+                }}
+                featured={true}
               />
             </div>
 
             <div>
-              <h3 className="text-lg font-semibold mb-6">Popular Right Now</h3>
+              <h3 className="text-lg font-semibold mb-6">
+                {selectedCategory || "All Items"}
+              </h3>
               <MenuSection 
                 onAddToCart={(item) => {
                   setSelectedProduct(item);
                   setIsDialogOpen(true);
-                }} 
+                }}
+                category={selectedCategory}
               />
             </div>
           </div>
