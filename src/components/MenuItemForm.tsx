@@ -39,12 +39,22 @@ const MenuItemForm = ({ onClose, onSuccess, initialData }: MenuItemFormProps) =>
   };
 
   const uploadImage = async (file: File) => {
-    const fileExt = file.name.split('.').pop();
-    const filePath = `${crypto.randomUUID()}.${fileExt}`;
+    // First check if user is authenticated
+    const { data: { session }, error: authError } = await supabase.auth.getSession();
+    if (authError || !session) {
+      throw new Error('Authentication required for image upload');
+    }
 
-    const { error: uploadError } = await supabase.storage
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${crypto.randomUUID()}.${fileExt}`;
+    const filePath = fileName;
+
+    const { error: uploadError, data } = await supabase.storage
       .from('menu-images')
-      .upload(filePath, file);
+      .upload(filePath, file, {
+        upsert: false,
+        contentType: file.type
+      });
 
     if (uploadError) throw uploadError;
 
@@ -73,7 +83,6 @@ const MenuItemForm = ({ onClose, onSuccess, initialData }: MenuItemFormProps) =>
       };
 
       if (initialData?.id) {
-        // Update existing item
         const { error } = await supabase
           .from("menu_items")
           .update(data)
@@ -82,8 +91,10 @@ const MenuItemForm = ({ onClose, onSuccess, initialData }: MenuItemFormProps) =>
         if (error) throw error;
         toast({ title: "Menu item updated successfully" });
       } else {
-        // Create new item
-        const { error } = await supabase.from("menu_items").insert([data]);
+        const { error } = await supabase
+          .from("menu_items")
+          .insert([data]);
+        
         if (error) throw error;
         toast({ title: "Menu item created successfully" });
       }
