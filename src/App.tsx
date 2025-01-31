@@ -10,6 +10,7 @@ import AdminLayout from "./pages/AdminLayout";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminMenu from "./pages/AdminMenu";
 import AdminOrders from "./pages/AdminOrders";
+import AdminDelivery from "./pages/AdminDelivery";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 
@@ -72,6 +73,7 @@ function App() {
               <Route index element={<AdminDashboard />} />
               <Route path="menu" element={<AdminMenu />} />
               <Route path="orders" element={<AdminOrders />} />
+              <Route path="delivery" element={<AdminDelivery />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

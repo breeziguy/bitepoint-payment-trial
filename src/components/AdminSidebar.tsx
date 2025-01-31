@@ -9,7 +9,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, List, Grid } from "lucide-react";
+import { LayoutDashboard, List, Grid, Truck } from "lucide-react";
 
 const menuItems = [
   {
@@ -26,6 +26,11 @@ const menuItems = [
     title: "Orders",
     url: "/admin/orders",
     icon: List,
+  },
+  {
+    title: "Delivery Settings",
+    url: "/admin/delivery",
+    icon: Truck,
   },
 ];
 
