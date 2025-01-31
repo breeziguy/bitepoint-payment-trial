@@ -23,7 +23,7 @@ interface MenuItemFormProps {
     name: string;
     price: number;
     description: string;
-    category: string;
+    category_id?: string;
     image_url?: string;
   };
 }
@@ -36,7 +36,7 @@ const MenuItemForm = ({ onClose, onSuccess, initialData }: MenuItemFormProps) =>
     name: initialData?.name || "",
     price: initialData?.price || 0,
     description: initialData?.description || "",
-    category: initialData?.category || "",
+    category_id: initialData?.category_id || "",
     image_url: initialData?.image_url || "",
   });
 
@@ -183,9 +183,9 @@ const MenuItemForm = ({ onClose, onSuccess, initialData }: MenuItemFormProps) =>
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
             <Select
-              value={formData.category}
+              value={formData.category_id}
               onValueChange={(value) =>
-                setFormData((prev) => ({ ...prev, category: value }))
+                setFormData((prev) => ({ ...prev, category_id: value }))
               }
               required
             >
@@ -194,7 +194,7 @@ const MenuItemForm = ({ onClose, onSuccess, initialData }: MenuItemFormProps) =>
               </SelectTrigger>
               <SelectContent>
                 {categories?.map((category) => (
-                  <SelectItem key={category.id} value={category.name}>
+                  <SelectItem key={category.id} value={category.id}>
                     {category.name}
                   </SelectItem>
                 ))}
