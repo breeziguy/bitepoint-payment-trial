@@ -30,6 +30,7 @@ interface CheckoutForm {
 const Cart = ({ open, onClose }: CartProps) => {
   const { items, removeFromCart } = useContext(CartContext);
   const { toast } = useToast();
+  const [showCheckoutForm, setShowCheckoutForm] = useState(false);
   const [checkoutForm, setCheckoutForm] = useState<CheckoutForm>({
     name: "",
     phone: "",
@@ -94,39 +95,53 @@ ${checkoutForm.address} ${checkoutForm.roomNumber || ""}` : ""}
         </DrawerHeader>
         
         <div className="p-4">
-          <div className="space-y-4 max-h-[30vh] overflow-y-auto">
-            {items.length === 0 ? (
-              <p className="text-center text-gray-500">Your cart is empty</p>
-            ) : (
-              <div className="space-y-4">
-                {items.map((item) => (
-                  <div key={item.id} className="flex justify-between items-center border-b pb-4">
-                    <div>
-                      <h3 className="font-medium">{item.name}</h3>
-                      <p className="text-sm text-gray-500">
-                        {formatPrice(item.price)} x {item.quantity}
-                      </p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeFromCart(item.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+          {!showCheckoutForm ? (
+            // Cart Items View
+            <div className="space-y-4">
+              <div className="space-y-4 max-h-[50vh] overflow-y-auto">
+                {items.length === 0 ? (
+                  <p className="text-center text-gray-500">Your cart is empty</p>
+                ) : (
+                  <div className="space-y-4">
+                    {items.map((item) => (
+                      <div key={item.id} className="flex justify-between items-center border-b pb-4">
+                        <div>
+                          <h3 className="font-medium">{item.name}</h3>
+                          <p className="text-sm text-gray-500">
+                            {formatPrice(item.price)} x {item.quantity}
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeFromCart(item.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
-            )}
-          </div>
-          
-          {items.length > 0 && (
-            <div className="space-y-4 mt-4">
-              <div className="flex justify-between mb-4">
-                <span className="font-medium">Total</span>
-                <span className="font-medium">{formatPrice(total)}</span>
-              </div>
-
+              
+              {items.length > 0 && (
+                <div className="space-y-4">
+                  <div className="flex justify-between mb-4">
+                    <span className="font-medium">Total</span>
+                    <span className="font-medium">{formatPrice(total)}</span>
+                  </div>
+                  <Button 
+                    className="w-full bg-[#FEF7CD] hover:bg-[#FEF7CD]/90 text-black"
+                    onClick={() => setShowCheckoutForm(true)}
+                  >
+                    Checkout
+                  </Button>
+                </div>
+              )}
+            </div>
+          ) : (
+            // Checkout Form View
+            <div className="space-y-4 animate-in slide-in-from-right">
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>Name</Label>
@@ -207,7 +222,7 @@ ${checkoutForm.address} ${checkoutForm.roomNumber || ""}` : ""}
                 className="w-full bg-[#FEF7CD] hover:bg-[#FEF7CD]/90 text-black"
                 onClick={handleCheckout}
               >
-                Checkout with WhatsApp
+                Make Payment
               </Button>
             </div>
           )}
