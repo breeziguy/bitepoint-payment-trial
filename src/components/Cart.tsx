@@ -6,7 +6,6 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import { useState } from "react";
 
 interface CartProps {
   open: boolean;
@@ -18,6 +17,10 @@ interface CartProps {
 const Cart = ({ open, onClose, items, setItems }: CartProps) => {
   const total = items.reduce((sum, item) => sum + item.price, 0);
 
+  const formatPrice = (price: number) => {
+    return `₦${(price * 1000).toLocaleString()}`; // Converting to Naira and formatting
+  };
+
   const removeItem = (itemId: string) => {
     setItems(items.filter(item => item.id !== itemId));
   };
@@ -25,8 +28,8 @@ const Cart = ({ open, onClose, items, setItems }: CartProps) => {
   const handleCheckout = () => {
     // Format the order message for WhatsApp
     const message = `*New Order*\n\n${items.map(item => 
-      `• ${item.name} - $${item.price}`
-    ).join('\n')}\n\n*Total: $${total.toFixed(2)}*`;
+      `• ${item.name} - ${formatPrice(item.price)}`
+    ).join('\n')}\n\n*Total: ${formatPrice(total)}*`;
     
     // Create WhatsApp link with pre-filled message
     const whatsappLink = `https://wa.me/+1234567890?text=${encodeURIComponent(message)}`;
@@ -50,7 +53,7 @@ const Cart = ({ open, onClose, items, setItems }: CartProps) => {
                   <div key={item.id} className="flex justify-between items-center border-b pb-4">
                     <div>
                       <h3 className="font-medium">{item.name}</h3>
-                      <p className="text-sm text-gray-500">${item.price}</p>
+                      <p className="text-sm text-gray-500">{formatPrice(item.price)}</p>
                     </div>
                     <Button
                       variant="ghost"
@@ -69,7 +72,7 @@ const Cart = ({ open, onClose, items, setItems }: CartProps) => {
             <div className="border-t pt-4 mt-4">
               <div className="flex justify-between mb-4">
                 <span className="font-medium">Total</span>
-                <span className="font-medium">${total.toFixed(2)}</span>
+                <span className="font-medium">{formatPrice(total)}</span>
               </div>
               <Button 
                 className="w-full bg-[#075E54] hover:bg-[#075E54]/90"

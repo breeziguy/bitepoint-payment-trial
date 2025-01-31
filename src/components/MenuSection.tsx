@@ -34,6 +34,10 @@ const menuItems: MenuItem[] = [
 ];
 
 const MenuSection = ({ onAddToCart }: MenuSectionProps) => {
+  const formatPrice = (price: number) => {
+    return `₦${(price * 1000).toLocaleString()}`; // Converting to Naira and formatting
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {menuItems.map((item) => (
@@ -46,7 +50,7 @@ const MenuSection = ({ onAddToCart }: MenuSectionProps) => {
           <CardHeader>
             <CardTitle className="flex justify-between items-center">
               <span>{item.name}</span>
-              <span className="text-[#FF9F1C]">${item.price}</span>
+              <span className="text-[#FF9F1C]">{formatPrice(item.price)}</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
