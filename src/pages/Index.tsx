@@ -5,6 +5,7 @@ import MenuSection from "@/components/MenuSection";
 import Cart from "@/components/Cart";
 import { CartProvider, CartContext } from "@/components/CartContext";
 import ProductDialog from "@/components/ProductDialog";
+import FloatingCartBar from "@/components/FloatingCartBar";
 
 const Index = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -47,27 +48,32 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Featured Items */}
-        <div className="container mx-auto px-4 py-8">
-          <h3 className="text-lg font-semibold mb-6">Featured Items</h3>
-          <MenuSection 
-            onAddToCart={(item) => {
-              setSelectedProduct(item);
-              setIsDialogOpen(true);
-            }} 
-          />
+        {/* Menu Sections */}
+        <div className="container mx-auto px-4 pb-24">
+          <div className="space-y-8">
+            <div>
+              <h3 className="text-lg font-semibold mb-6">Featured Items</h3>
+              <MenuSection 
+                onAddToCart={(item) => {
+                  setSelectedProduct(item);
+                  setIsDialogOpen(true);
+                }} 
+              />
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold mb-6">Popular Right Now</h3>
+              <MenuSection 
+                onAddToCart={(item) => {
+                  setSelectedProduct(item);
+                  setIsDialogOpen(true);
+                }} 
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Popular Items */}
-        <div className="container mx-auto px-4 py-8">
-          <h3 className="text-lg font-semibold mb-6">Popular Right Now</h3>
-          <MenuSection 
-            onAddToCart={(item) => {
-              setSelectedProduct(item);
-              setIsDialogOpen(true);
-            }} 
-          />
-        </div>
+        <FloatingCartBar onCartClick={() => setIsCartOpen(true)} />
 
         <Cart 
           open={isCartOpen} 

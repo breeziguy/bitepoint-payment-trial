@@ -48,6 +48,13 @@ const MenuSection = ({ onAddToCart }: MenuSectionProps) => {
     <div className="space-y-4">
       {menuItems.map((item) => (
         <div key={item.id} className="flex items-start space-x-4 p-4 bg-white rounded-lg">
+          <div className="w-24 h-24 relative flex-shrink-0">
+            <img
+              src={item.image}
+              alt={item.name}
+              className="w-full h-full object-cover rounded-lg"
+            />
+          </div>
           <div className="flex-1">
             <div className="flex justify-between items-start">
               <div>
@@ -65,13 +72,6 @@ const MenuSection = ({ onAddToCart }: MenuSectionProps) => {
               </button>
             </div>
             <p className="text-gray-500 text-sm mt-2 line-clamp-2">{item.description}</p>
-          </div>
-          <div className="w-24 h-24 relative flex-shrink-0">
-            <img
-              src={item.image}
-              alt={item.name}
-              className="w-full h-full object-cover rounded-lg"
-            />
           </div>
         </div>
       ))}
