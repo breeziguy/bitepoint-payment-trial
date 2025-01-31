@@ -95,7 +95,7 @@ const Cart = ({ open, onClose }: CartProps) => {
 
     if (
       checkoutForm.deliveryType === "delivery" &&
-      (!checkoutForm.streetAddress || !checkoutForm.city || !checkoutForm.postalCode || !checkoutForm.deliveryZoneId)
+      (!checkoutForm.streetAddress || !checkoutForm.deliveryZoneId)
     ) {
       toast({
         title: "Error",
@@ -175,8 +175,7 @@ ${
   checkoutForm.deliveryType === "delivery"
     ? `> Delivery Address:
 ${checkoutForm.streetAddress}
-${checkoutForm.unitNumber ? `${checkoutForm.unitNumber}\n` : ""}${checkoutForm.city}
-${checkoutForm.postalCode}
+${checkoutForm.unitNumber ? `${checkoutForm.unitNumber}\n` : ""}
 Zone: ${selectedZoneName}`
     : ""
 }

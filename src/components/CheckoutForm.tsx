@@ -19,8 +19,6 @@ export interface CheckoutFormData {
   deliveryType: "pickup" | "delivery";
   streetAddress?: string;
   unitNumber?: string;
-  city?: string;
-  postalCode?: string;
   deliveryZoneId?: string;
 }
 
@@ -137,22 +135,6 @@ const CheckoutForm = ({
                 placeholder="Unit number (optional)"
                 value={formData.unitNumber}
                 onChange={(e) => onFormChange({ unitNumber: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>City</Label>
-              <Input
-                placeholder="Enter city"
-                value={formData.city}
-                onChange={(e) => onFormChange({ city: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Postal code</Label>
-              <Input
-                placeholder="Enter postal code"
-                value={formData.postalCode}
-                onChange={(e) => onFormChange({ postalCode: e.target.value })}
               />
             </div>
           </div>
