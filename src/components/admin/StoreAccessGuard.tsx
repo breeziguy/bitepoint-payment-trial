@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { LockIcon } from "lucide-react";
 
 interface StoreAccessGuardProps {
@@ -17,7 +17,6 @@ interface StoreAccessGuardProps {
 
 export function StoreAccessGuard({ children }: StoreAccessGuardProps) {
   const navigate = useNavigate();
-  const location = useLocation();
 
   const { data: subscription, isLoading } = useQuery({
     queryKey: ["store-subscription"],
@@ -45,13 +44,7 @@ export function StoreAccessGuard({ children }: StoreAccessGuardProps) {
 
   // Handle renewal navigation
   const handleRenewal = () => {
-    console.log("Current location:", location.pathname);
-    const targetPath = location.pathname.includes('/admin') 
-      ? '/admin/settings'
-      : '/admin/settings';
-    
-    console.log("Navigating to:", targetPath);
-    navigate(targetPath, { 
+    navigate("/admin/settings", { 
       replace: true,
       state: { tab: "billing" }
     });
