@@ -15,6 +15,7 @@ Deno.serve(async (req) => {
 
   try {
     const { plan_id, amount } = await req.json()
+    console.log('Received request:', { plan_id, amount })
 
     // Get the subscription plan details
     const { data: plan, error: planError } = await supabase
@@ -24,8 +25,11 @@ Deno.serve(async (req) => {
       .single()
 
     if (planError || !plan) {
+      console.error('Plan not found:', planError)
       throw new Error('Plan not found')
     }
+
+    console.log('Found plan:', plan)
 
     // Initialize payment with Paystack
     const response = await fetch('https://api.paystack.co/transaction/initialize', {
@@ -36,7 +40,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         amount: amount * 100, // Convert to kobo
-        email: 'customer@example.com', // This should come from the request
+        email: 'mrolabola@gmail.com', // Using the logged in user's email
         callback_url: `${req.headers.get('origin')}/admin/settings?tab=billing`,
         metadata: {
           plan_id,
@@ -51,12 +55,18 @@ Deno.serve(async (req) => {
       }),
     })
 
-    const data = await response.json()
+    const paystackData = await response.json()
+    console.log('Paystack response:', paystackData)
 
-    return new Response(JSON.stringify(data), {
+    if (!paystackData.status) {
+      throw new Error(paystackData.message || 'Failed to initialize payment')
+    }
+
+    return new Response(JSON.stringify(paystackData.data), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {
+    console.error('Error in paystack function:', error)
     return new Response(JSON.stringify({ error: error.message }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

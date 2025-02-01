@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { useNavigate } from "react-router-dom";
 
 interface SubscriptionPlan {
   id: string;
@@ -27,7 +26,6 @@ interface StoreSubscription {
 
 export default function BillingSettings() {
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   const { data: plans, isLoading: plansLoading } = useQuery({
     queryKey: ["subscription-plans"],
@@ -55,6 +53,8 @@ export default function BillingSettings() {
 
   const handleSubscribe = async (plan: SubscriptionPlan) => {
     try {
+      console.log('Initializing payment for plan:', plan);
+      
       const response = await supabase.functions.invoke('paystack', {
         body: {
           plan_id: plan.id,
@@ -62,18 +62,20 @@ export default function BillingSettings() {
         },
       });
 
+      console.log('Paystack function response:', response);
+
       if (response.error) {
         console.error('Payment initialization error:', response.error);
         throw new Error(response.error.message);
       }
 
-      const data = response.data;
-      if (data?.authorization_url) {
-        // Redirect to Paystack checkout
-        window.location.href = data.authorization_url;
-      } else {
-        throw new Error('No authorization URL received');
+      if (!response.data || !response.data.authorization_url) {
+        console.error('Invalid response data:', response.data);
+        throw new Error('Failed to get payment authorization URL');
       }
+
+      // Redirect to Paystack checkout
+      window.location.href = response.data.authorization_url;
     } catch (error) {
       console.error('Payment initialization error:', error);
       toast({
