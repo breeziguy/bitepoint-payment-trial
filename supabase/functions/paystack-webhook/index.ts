@@ -73,9 +73,22 @@ Deno.serve(async (req) => {
 
     console.log('Found plan:', plan)
 
+    // First, mark any existing active subscriptions as expired
+    const { error: updateError } = await supabase
+      .from('store_subscriptions')
+      .update({ status: 'expired' })
+      .eq('paystack_email', verificationData.data?.customer?.email || 'mrolabola@gmail.com')
+      .eq('status', 'active')
+
+    if (updateError) {
+      console.error('Error updating existing subscriptions:', updateError)
+      throw updateError
+    }
+
+    // Then create the new active subscription
     const { data: subscription, error: subscriptionError } = await supabase
       .from('store_subscriptions')
-      .upsert({
+      .insert({
         plan_id: metadata.plan_id,
         status: 'active',
         current_period_start: new Date().toISOString(),
@@ -88,19 +101,20 @@ Deno.serve(async (req) => {
       .single()
 
     if (subscriptionError) {
-      console.error('Error updating subscription:', subscriptionError)
+      console.error('Error creating subscription:', subscriptionError)
       throw subscriptionError
     }
 
-    console.log('Subscription updated successfully:', subscription)
+    console.log('Subscription created successfully:', subscription)
 
     // For GET requests (direct callbacks), redirect back to the admin page
     if (req.method === 'GET') {
+      const redirectUrl = new URL('/admin', url.origin)
       return new Response(null, {
         status: 302,
         headers: {
           ...corsHeaders,
-          'Location': `${url.origin}/admin`,
+          'Location': redirectUrl.toString(),
         },
       })
     }
