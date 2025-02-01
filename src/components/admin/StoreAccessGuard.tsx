@@ -55,7 +55,7 @@ export function StoreAccessGuard({ children }: StoreAccessGuardProps) {
   if (isSubscriptionExpired) {
     return (
       <Dialog open={true} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
               <LockIcon className="h-6 w-6 text-red-600" />
@@ -65,8 +65,11 @@ export function StoreAccessGuard({ children }: StoreAccessGuardProps) {
               Your subscription has expired. Please renew your subscription to regain access to your store.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex justify-center">
-            <Button onClick={handleRenewal}>
+          <div className="flex justify-center mt-6">
+            <Button 
+              onClick={handleRenewal}
+              className="w-full sm:w-auto"
+            >
               Renew Subscription
             </Button>
           </div>
