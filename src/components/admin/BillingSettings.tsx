@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
 
 interface SubscriptionPlan {
   id: string;
@@ -26,6 +27,7 @@ interface StoreSubscription {
 
 export default function BillingSettings() {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const { data: plans, isLoading: plansLoading } = useQuery({
     queryKey: ["subscription-plans"],
@@ -61,12 +63,17 @@ export default function BillingSettings() {
       });
 
       if (response.error) {
+        console.error('Payment initialization error:', response.error);
         throw new Error(response.error.message);
       }
 
       const data = response.data;
-      // Redirect to Paystack checkout
-      window.location.href = data.authorization_url;
+      if (data?.authorization_url) {
+        // Redirect to Paystack checkout
+        window.location.href = data.authorization_url;
+      } else {
+        throw new Error('No authorization URL received');
+      }
     } catch (error) {
       console.error('Payment initialization error:', error);
       toast({
