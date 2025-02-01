@@ -5,7 +5,6 @@ const PAYSTACK_SECRET_KEY = Deno.env.get('PAYSTACK_SECRET_KEY')
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
-// Initialize Supabase client with service role key
 const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!, {
   auth: {
     autoRefreshToken: false,
@@ -14,24 +13,20 @@ const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!, {
 })
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    // Get the reference from either the webhook payload or URL parameters
     const url = new URL(req.url)
     const urlReference = url.searchParams.get('reference')
     
     let reference: string | undefined
     
     if (req.method === 'GET' && urlReference) {
-      // Handle direct callback from payment page
       console.log('Processing callback with reference:', urlReference)
       reference = urlReference
     } else if (req.method === 'POST') {
-      // Handle webhook event
       const payload = await req.json()
       console.log('Received webhook payload:', JSON.stringify(payload, null, 2))
       reference = payload.data?.reference
@@ -44,7 +39,6 @@ Deno.serve(async (req) => {
 
     console.log('Processing transaction reference:', reference)
 
-    // Verify the transaction with Paystack
     const verifyResponse = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
       headers: {
         'Authorization': `Bearer ${PAYSTACK_SECRET_KEY}`,
@@ -60,14 +54,12 @@ Deno.serve(async (req) => {
       throw new Error('Transaction verification failed')
     }
 
-    // Get the plan ID from metadata
     const metadata = verificationData.data?.metadata
     if (!metadata?.plan_id) {
       console.error('No plan ID found in transaction metadata')
       throw new Error('No plan ID found in transaction metadata')
     }
 
-    // Get the plan details
     const { data: plan, error: planError } = await supabase
       .from('subscription_plans')
       .select('*')
@@ -81,17 +73,16 @@ Deno.serve(async (req) => {
 
     console.log('Found plan:', plan)
 
-    // Create or update subscription using service role client
     const { data: subscription, error: subscriptionError } = await supabase
       .from('store_subscriptions')
       .upsert({
         plan_id: metadata.plan_id,
         status: 'active',
         current_period_start: new Date().toISOString(),
-        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         paystack_email: verificationData.data?.customer?.email || 'mrolabola@gmail.com',
         paystack_subscription_code: reference,
-        store_id: crypto.randomUUID(), // This should be the actual store ID
+        store_id: crypto.randomUUID(),
       })
       .select()
       .single()
@@ -103,18 +94,17 @@ Deno.serve(async (req) => {
 
     console.log('Subscription updated successfully:', subscription)
 
-    // For GET requests (direct callbacks), redirect back to the billing page
+    // For GET requests (direct callbacks), redirect back to the admin page
     if (req.method === 'GET') {
       return new Response(null, {
         status: 302,
         headers: {
           ...corsHeaders,
-          'Location': `${url.origin}/admin/settings?tab=billing&status=success`,
+          'Location': `${url.origin}/admin`,
         },
       })
     }
 
-    // For POST requests (webhooks), return success response
     return new Response(JSON.stringify({ status: 'success' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })

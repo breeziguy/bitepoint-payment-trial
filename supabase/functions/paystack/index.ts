@@ -8,7 +8,6 @@ const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')
 const supabase = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!)
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -17,7 +16,6 @@ Deno.serve(async (req) => {
     const { plan_id, amount } = await req.json()
     console.log('Received request:', { plan_id, amount })
 
-    // Get the subscription plan details
     const { data: plan, error: planError } = await supabase
       .from('subscription_plans')
       .select('*')
@@ -31,7 +29,6 @@ Deno.serve(async (req) => {
 
     console.log('Found plan:', plan)
 
-    // Initialize payment with Paystack
     const response = await fetch('https://api.paystack.co/transaction/initialize', {
       method: 'POST',
       headers: {
@@ -39,9 +36,9 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        amount: amount * 100, // Convert to kobo
-        email: 'mrolabola@gmail.com', // Using the logged in user's email
-        callback_url: `${req.headers.get('origin')}/admin/settings?tab=billing`,
+        amount: amount * 100,
+        email: 'mrolabola@gmail.com',
+        callback_url: `${req.headers.get('origin')}/admin`,
         metadata: {
           plan_id,
           custom_fields: [
