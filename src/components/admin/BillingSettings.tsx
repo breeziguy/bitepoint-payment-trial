@@ -104,7 +104,7 @@ export default function BillingSettings() {
       const response = await supabase.functions.invoke('paystack', {
         body: {
           plan_id: plan.id,
-          amount: plan.price,
+          amount: plan.price, // Sending the amount in Naira
         },
       });
 
