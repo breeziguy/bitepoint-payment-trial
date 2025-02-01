@@ -104,7 +104,7 @@ export default function BillingSettings() {
       const response = await supabase.functions.invoke('paystack', {
         body: {
           plan_id: plan.id,
-          amount: plan.price, // Sending the amount in Naira
+          amount: plan.price / 100, // Convert from kobo to Naira for display
         },
       });
 
@@ -194,7 +194,7 @@ export default function BillingSettings() {
               <CardTitle>{plan.name}</CardTitle>
               <CardDescription>{plan.description}</CardDescription>
               <div className="mt-4">
-                <div className="text-3xl font-bold">₦{plan.price.toLocaleString()}</div>
+                <div className="text-3xl font-bold">₦{(plan.price / 100).toLocaleString()}</div>
                 <div className="text-sm text-muted-foreground">per month</div>
               </div>
             </CardHeader>

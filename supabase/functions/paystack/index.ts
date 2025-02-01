@@ -29,8 +29,8 @@ Deno.serve(async (req) => {
 
     console.log('Found plan:', plan)
 
-    // Convert Naira amount to kobo for Paystack
-    const amountInKobo = amount * 100
+    // The amount is already in Naira, convert to kobo for Paystack
+    const amountInKobo = Math.round(amount * 100)
 
     const response = await fetch('https://api.paystack.co/transaction/initialize', {
       method: 'POST',
@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        amount: amountInKobo, // Convert Naira to kobo for Paystack
+        amount: amountInKobo,
         email: 'mrolabola@gmail.com',
         callback_url: `${req.headers.get('origin')}/subscription/success`,
         metadata: {
