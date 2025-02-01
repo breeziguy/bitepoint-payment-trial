@@ -4,6 +4,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { SubscriptionBanner } from "@/components/admin/SubscriptionBanner";
+import { StoreAccessGuard } from "@/components/admin/StoreAccessGuard";
 
 export default function AdminLayout() {
   const navigate = useNavigate();
@@ -20,17 +21,19 @@ export default function AdminLayout() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex flex-col w-full">
-        <div className="flex flex-1">
-          <AdminSidebar />
-          <div className="flex-1 flex flex-col">
-            <SubscriptionBanner />
-            <main className="flex-1 p-8 bg-gray-50">
-              <Outlet />
-            </main>
+      <StoreAccessGuard>
+        <div className="min-h-screen flex flex-col w-full">
+          <div className="flex flex-1">
+            <AdminSidebar />
+            <div className="flex-1 flex flex-col">
+              <SubscriptionBanner />
+              <main className="flex-1 p-8 bg-gray-50">
+                <Outlet />
+              </main>
+            </div>
           </div>
         </div>
-      </div>
+      </StoreAccessGuard>
     </SidebarProvider>
   );
 }

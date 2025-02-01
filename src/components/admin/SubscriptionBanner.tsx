@@ -3,11 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Timer } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 export function SubscriptionBanner() {
-  const navigate = useNavigate();
-
   const { data: subscription } = useQuery({
     queryKey: ["store-subscription"],
     queryFn: async () => {
@@ -33,6 +30,34 @@ export function SubscriptionBanner() {
 
   if (daysUntilExpiry > 7) return null;
 
+  const handleRenew = async () => {
+    try {
+      const response = await supabase.functions.invoke('paystack', {
+        body: {
+          plan_id: subscription.plan_id,
+          amount: subscription.subscription_plans.price,
+        },
+      });
+
+      if (response.error) {
+        console.error('Payment initialization error:', response.error);
+        return;
+      }
+
+      if (!response.data || !response.data.authorization_url) {
+        console.error('Invalid response data:', response.data);
+        return;
+      }
+
+      // Store the plan ID in session storage to verify after payment
+      sessionStorage.setItem('pending_subscription_plan', subscription.plan_id);
+      
+      window.location.href = response.data.authorization_url;
+    } catch (error) {
+      console.error('Error initiating renewal:', error);
+    }
+  };
+
   return (
     <div className="sticky top-0 z-50 w-full border-b bg-background">
       <Alert className="rounded-none border-0 bg-yellow-50">
@@ -44,7 +69,7 @@ export function SubscriptionBanner() {
           </AlertDescription>
           <Button 
             variant="outline" 
-            onClick={() => navigate("/admin/settings?tab=billing")}
+            onClick={handleRenew}
             className="ml-4 border-yellow-600 text-yellow-700 hover:bg-yellow-100 hover:text-yellow-800"
           >
             Renew Now
