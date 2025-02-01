@@ -10,16 +10,20 @@ export function StoreAccessGuard({ children }: { children: React.ReactNode }) {
   const { data: subscription, isLoading } = useQuery({
     queryKey: ["store-subscription"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: subscriptions, error } = await supabase
         .from("store_subscriptions")
         .select("*, subscription_plans(*)")
         .eq("paystack_email", "mrolabola@gmail.com")
-        .eq("status", "active")
-        .order("created_at", { ascending: false })
-        .maybeSingle();
+        .eq("status", "active");
 
       if (error) throw error;
-      return data;
+      
+      // Return the most recent active subscription
+      return subscriptions && subscriptions.length > 0 
+        ? subscriptions.sort((a, b) => 
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          )[0]
+        : null;
     },
   });
 
@@ -27,7 +31,7 @@ export function StoreAccessGuard({ children }: { children: React.ReactNode }) {
 
   if (isLoading) return children;
 
-  if (isExpired) {
+  if (!subscription || isExpired) {
     return (
       <Dialog open={true}>
         <DialogContent className="sm:max-w-md">

@@ -23,22 +23,27 @@ export default function SubscriptionSuccess() {
         }
 
         // Check if a subscription already exists
-        const { data: existingSubscription, error: checkError } = await supabase
+        const { data: existingSubscriptions, error: checkError } = await supabase
           .from("store_subscriptions")
           .select("*")
           .eq("paystack_email", "mrolabola@gmail.com")
-          .eq("status", "active")
-          .maybeSingle();
+          .eq("status", "active");
 
         if (checkError) {
           throw checkError;
         }
 
-        if (existingSubscription) {
-          console.log('Subscription already exists:', existingSubscription);
-          sessionStorage.removeItem('pending_subscription_plan');
-          navigate("/admin/settings?tab=billing", { replace: true });
-          return;
+        // If there are existing active subscriptions, update them to expired
+        if (existingSubscriptions && existingSubscriptions.length > 0) {
+          const { error: updateError } = await supabase
+            .from("store_subscriptions")
+            .update({ status: 'expired' })
+            .eq("paystack_email", "mrolabola@gmail.com")
+            .eq("status", "active");
+
+          if (updateError) {
+            throw updateError;
+          }
         }
 
         // Show success message
@@ -55,7 +60,7 @@ export default function SubscriptionSuccess() {
       } catch (error) {
         console.error('Subscription verification error:', error);
         navigate('/subscription/error', {
-          state: { error: 'Failed to verify subscription' },
+          state: { error: error.message || 'Failed to verify subscription' },
           replace: true
         });
       }
