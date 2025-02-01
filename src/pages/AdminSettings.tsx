@@ -58,7 +58,6 @@ export default function AdminSettings() {
   useEffect(() => {
     const tab = searchParams.get("tab");
     if (tab) {
-      // Set the active tab based on URL parameter
       setSearchParams({ tab });
     }
   }, [searchParams, setSearchParams]);

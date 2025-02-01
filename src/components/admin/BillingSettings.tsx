@@ -65,46 +65,42 @@ export default function BillingSettings() {
 
   const handleSubscribe = async (plan: SubscriptionPlan) => {
     try {
-      if (!subscription) {
-        const response = await supabase.functions.invoke('paystack', {
-          body: {
-            plan_id: plan.id,
-            amount: plan.price,
-          },
+      // Check if there's any subscription (active or pending)
+      if (subscription) {
+        toast({
+          title: "Subscription Exists",
+          description: subscription.status === 'active' 
+            ? "You already have an active subscription. Please cancel your current subscription before subscribing to a new plan."
+            : "You have a pending subscription. Please wait for it to be processed or contact support.",
+          variant: "destructive",
         });
-
-        if (response.error) {
-          console.error('Payment initialization error:', response.error);
-          navigate('/subscription/error', { 
-            state: { error: response.error.message }
-          });
-          return;
-        }
-
-        if (!response.data || !response.data.authorization_url) {
-          console.error('Invalid response data:', response.data);
-          navigate('/subscription/error', {
-            state: { error: 'Failed to get payment authorization URL' }
-          });
-          return;
-        }
-
-        window.location.href = response.data.authorization_url;
-      } else {
-        if (subscription.status === 'active') {
-          toast({
-            title: "Active Subscription",
-            description: "You already have an active subscription. Please cancel your current subscription before subscribing to a new plan.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Subscription Status",
-            description: "You have a pending subscription. Please wait for it to be processed or contact support.",
-            variant: "destructive",
-          });
-        }
+        return;
       }
+
+      const response = await supabase.functions.invoke('paystack', {
+        body: {
+          plan_id: plan.id,
+          amount: plan.price,
+        },
+      });
+
+      if (response.error) {
+        console.error('Payment initialization error:', response.error);
+        navigate('/subscription/error', { 
+          state: { error: response.error.message }
+        });
+        return;
+      }
+
+      if (!response.data || !response.data.authorization_url) {
+        console.error('Invalid response data:', response.data);
+        navigate('/subscription/error', {
+          state: { error: 'Failed to get payment authorization URL' }
+        });
+        return;
+      }
+
+      window.location.href = response.data.authorization_url;
     } catch (error) {
       console.error('Payment initialization error:', error);
       navigate('/subscription/error', {
@@ -121,8 +117,6 @@ export default function BillingSettings() {
       </div>
     );
   }
-
-  const hasActiveSubscription = subscription?.status === "active";
 
   return (
     <div className="space-y-6">
