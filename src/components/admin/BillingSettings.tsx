@@ -53,25 +53,22 @@ export default function BillingSettings() {
 
   const handleSubscribe = async (plan: SubscriptionPlan) => {
     try {
-      const response = await fetch("/api/paystack", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const response = await supabase.functions.invoke('paystack', {
+        body: {
           plan_id: plan.id,
           amount: plan.price,
-        }),
+        },
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to initialize subscription");
+      if (response.error) {
+        throw new Error(response.error.message);
       }
 
-      const data = await response.json();
+      const data = response.data;
       // Redirect to Paystack checkout
       window.location.href = data.authorization_url;
     } catch (error) {
+      console.error('Payment initialization error:', error);
       toast({
         title: "Error",
         description: "Failed to initialize subscription. Please try again.",
