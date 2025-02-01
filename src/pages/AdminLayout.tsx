@@ -21,12 +21,14 @@ export default function AdminLayout() {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex flex-col w-full">
-        <SubscriptionBanner />
         <div className="flex flex-1">
           <AdminSidebar />
-          <main className="flex-1 p-8 bg-gray-50">
-            <Outlet />
-          </main>
+          <div className="flex-1 flex flex-col">
+            <SubscriptionBanner />
+            <main className="flex-1 p-8 bg-gray-50">
+              <Outlet />
+            </main>
+          </div>
         </div>
       </div>
     </SidebarProvider>
