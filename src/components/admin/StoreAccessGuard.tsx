@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { LockIcon } from "lucide-react";
+import { useEffect } from "react";
 
 interface StoreAccessGuardProps {
   children: React.ReactNode;
@@ -29,12 +30,23 @@ export function StoreAccessGuard({ children }: StoreAccessGuardProps) {
         .order("created_at", { ascending: false })
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching subscription:", error);
+        throw error;
+      }
       return data;
     },
   });
 
-  const isSubscriptionExpired = !subscription || new Date(subscription.current_period_end) < new Date();
+  // Check if subscription is expired
+  const isSubscriptionExpired = !subscription || 
+    new Date(subscription.current_period_end) < new Date() || 
+    subscription.status !== 'active';
+
+  // Handle renewal navigation
+  const handleRenewal = () => {
+    navigate("/admin/settings?tab=billing");
+  };
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -54,7 +66,7 @@ export function StoreAccessGuard({ children }: StoreAccessGuardProps) {
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-center">
-            <Button onClick={() => navigate("/admin/settings?tab=billing")}>
+            <Button onClick={handleRenewal}>
               Renew Subscription
             </Button>
           </div>
