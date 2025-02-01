@@ -1,49 +1,60 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { LockIcon } from "lucide-react";
 
-export function StoreAccessGuard({ children }: { children: React.ReactNode }) {
+interface StoreAccessGuardProps {
+  children: React.ReactNode;
+}
+
+export function StoreAccessGuard({ children }: StoreAccessGuardProps) {
   const navigate = useNavigate();
-  
+
   const { data: subscription, isLoading } = useQuery({
     queryKey: ["store-subscription"],
     queryFn: async () => {
-      const { data: subscriptions, error } = await supabase
+      const { data, error } = await supabase
         .from("store_subscriptions")
         .select("*, subscription_plans(*)")
         .eq("paystack_email", "mrolabola@gmail.com")
-        .eq("status", "active");
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .maybeSingle();
 
       if (error) throw error;
-      
-      // Return the most recent active subscription
-      return subscriptions && subscriptions.length > 0 
-        ? subscriptions.sort((a, b) => 
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          )[0]
-        : null;
+      return data;
     },
   });
 
-  const isExpired = subscription && new Date(subscription.current_period_end) < new Date();
+  const isSubscriptionExpired = !subscription || new Date(subscription.current_period_end) < new Date();
 
-  if (isLoading) return children;
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
-  if (!subscription || isExpired) {
+  if (isSubscriptionExpired) {
     return (
-      <Dialog open={true}>
+      <Dialog open={true} onOpenChange={() => {}}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Store Access Restricted</DialogTitle>
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+              <LockIcon className="h-6 w-6 text-red-600" />
+            </div>
+            <DialogTitle className="text-center">Store Access Restricted</DialogTitle>
+            <DialogDescription className="text-center">
+              Your subscription has expired. Please renew your subscription to regain access to your store.
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <p>Your store is currently inactive due to an expired subscription. Please renew your subscription to continue using the store.</p>
-            <Button 
-              onClick={() => navigate("/admin/settings?tab=billing")}
-              className="w-full"
-            >
+          <div className="flex justify-center">
+            <Button onClick={() => navigate("/admin/settings?tab=billing")}>
               Renew Subscription
             </Button>
           </div>
@@ -52,5 +63,5 @@ export function StoreAccessGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return children;
+  return <>{children}</>;
 }
