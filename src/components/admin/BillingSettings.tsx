@@ -32,11 +32,9 @@ export default function BillingSettings() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  // Check for Paystack transaction status on component mount
   useEffect(() => {
     const reference = searchParams.get('reference');
     if (reference) {
-      // Navigate to success page
       navigate('/subscription/success', { replace: true });
     }
   }, [searchParams, navigate]);
@@ -67,6 +65,26 @@ export default function BillingSettings() {
 
   const handleSubscribe = async (plan: SubscriptionPlan) => {
     try {
+      // Check if user has an active subscription for this plan
+      if (subscription?.status === "active" && subscription?.plan_id === plan.id) {
+        toast({
+          title: "Already Subscribed",
+          description: "You already have an active subscription to this plan.",
+          variant: "default",
+        });
+        return;
+      }
+
+      // Check if user has any active subscription
+      if (subscription?.status === "active") {
+        toast({
+          title: "Active Subscription",
+          description: "Please cancel your current subscription before switching plans.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       console.log('Initializing payment for plan:', plan);
       
       const response = await supabase.functions.invoke('paystack', {
@@ -165,10 +183,12 @@ export default function BillingSettings() {
               <Button
                 className="w-full"
                 onClick={() => handleSubscribe(plan)}
-                disabled={subscription?.status === "active" && subscription?.plan_id === plan.id}
+                disabled={subscription?.status === "active"}
               >
                 {subscription?.status === "active" && subscription?.plan_id === plan.id
                   ? "Current Plan"
+                  : subscription?.status === "active"
+                  ? "Cancel Current Plan First"
                   : "Subscribe"}
               </Button>
             </CardFooter>
