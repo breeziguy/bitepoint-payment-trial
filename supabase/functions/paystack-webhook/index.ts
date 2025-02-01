@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json()
-    console.log('Received webhook:', body)
+    console.log('Received webhook payload:', body)
     
     const hash = req.headers.get('x-paystack-signature')
     
@@ -35,8 +35,8 @@ Deno.serve(async (req) => {
     const { event, data } = body
 
     // Handle successful payment
-    if (event === 'charge.success') {
-      console.log('Processing successful charge:', data)
+    if (event === 'charge.success' || event === 'transfer.success') {
+      console.log('Processing successful payment:', data)
       
       const { metadata, customer, reference } = data
 
@@ -51,6 +51,7 @@ Deno.serve(async (req) => {
           },
         })
         verificationStatus = await verifyResponse.json()
+        console.log('Verification response:', verificationStatus)
       } else {
         // Auto-approve test transactions
         verificationStatus = { status: true }
@@ -62,10 +63,24 @@ Deno.serve(async (req) => {
         throw new Error('Transaction verification failed')
       }
 
-      console.log('Transaction verified:', verificationStatus)
+      console.log('Transaction verified successfully')
+
+      // Get the plan details
+      const { data: plan, error: planError } = await supabase
+        .from('subscription_plans')
+        .select('*')
+        .eq('id', metadata.plan_id)
+        .single()
+
+      if (planError) {
+        console.error('Error fetching plan:', planError)
+        throw planError
+      }
+
+      console.log('Found plan:', plan)
 
       // Create or update subscription
-      const { error: subscriptionError } = await supabase
+      const { data: subscription, error: subscriptionError } = await supabase
         .from('store_subscriptions')
         .upsert({
           plan_id: metadata.plan_id,
@@ -76,13 +91,15 @@ Deno.serve(async (req) => {
           paystack_subscription_code: reference,
           store_id: crypto.randomUUID(), // This should be the actual store ID
         })
+        .select()
+        .single()
 
       if (subscriptionError) {
         console.error('Error updating subscription:', subscriptionError)
         throw subscriptionError
       }
 
-      console.log('Subscription updated successfully')
+      console.log('Subscription updated successfully:', subscription)
     }
 
     return new Response(JSON.stringify({ status: 'success' }), {
