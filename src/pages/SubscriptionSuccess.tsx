@@ -22,41 +22,55 @@ export default function SubscriptionSuccess() {
           return;
         }
 
-        // Check if a subscription already exists
-        const { data: existingSubscriptions, error: checkError } = await supabase
+        // Get plan details
+        const { data: plan, error: planError } = await supabase
+          .from('subscription_plans')
+          .select('*')
+          .eq('id', pendingPlanId)
+          .single();
+
+        if (planError || !plan) {
+          throw new Error('Plan not found');
+        }
+
+        // Update existing subscriptions to expired
+        const { error: updateError } = await supabase
           .from("store_subscriptions")
-          .select("*")
+          .update({ status: 'expired' })
           .eq("paystack_email", "mrolabola@gmail.com")
           .eq("status", "active");
 
-        if (checkError) {
-          throw checkError;
+        if (updateError) {
+          throw updateError;
         }
 
-        // If there are existing active subscriptions, update them to expired
-        if (existingSubscriptions && existingSubscriptions.length > 0) {
-          const { error: updateError } = await supabase
-            .from("store_subscriptions")
-            .update({ status: 'expired' })
-            .eq("paystack_email", "mrolabola@gmail.com")
-            .eq("status", "active");
+        // Create new active subscription
+        const { error: subscriptionError } = await supabase
+          .from("store_subscriptions")
+          .insert({
+            plan_id: pendingPlanId,
+            status: 'active',
+            current_period_start: new Date().toISOString(),
+            current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+            paystack_email: "mrolabola@gmail.com",
+            store_id: crypto.randomUUID(),
+          });
 
-          if (updateError) {
-            throw updateError;
-          }
+        if (subscriptionError) {
+          throw subscriptionError;
         }
 
         // Show success message
         toast({
-          title: "Subscription Successful",
-          description: "Your subscription has been processed successfully.",
+          title: "Subscription Activated",
+          description: "Your subscription has been activated successfully.",
         });
 
         // Clean up
         sessionStorage.removeItem('pending_subscription_plan');
         
-        // Redirect to billing tab
-        navigate("/admin/settings?tab=billing", { replace: true });
+        // Redirect to admin dashboard
+        navigate("/admin", { replace: true });
       } catch (error) {
         console.error('Subscription verification error:', error);
         navigate('/subscription/error', {
