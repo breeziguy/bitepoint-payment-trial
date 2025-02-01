@@ -31,26 +31,16 @@ export default function BillingSettings() {
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
 
-  // Check for Paystack transaction reference on component mount
+  // Check for Paystack transaction status on component mount
   useEffect(() => {
-    const reference = searchParams.get('reference');
-    if (reference) {
+    const status = searchParams.get('status');
+    if (status === 'success') {
       toast({
-        title: "Payment Processing",
-        description: "Your payment is being processed. Please wait...",
+        title: "Payment Successful",
+        description: "Your subscription has been activated successfully.",
       });
-      
-      // Poll for subscription status changes
-      const pollInterval = setInterval(async () => {
-        await queryClient.invalidateQueries({ queryKey: ["store-subscription"] });
-      }, 2000); // Poll every 2 seconds
-
-      // Stop polling after 30 seconds
-      setTimeout(() => {
-        clearInterval(pollInterval);
-      }, 30000);
-
-      return () => clearInterval(pollInterval);
+      // Refresh subscription data
+      queryClient.invalidateQueries({ queryKey: ["store-subscription"] });
     }
   }, [searchParams, toast, queryClient]);
 
