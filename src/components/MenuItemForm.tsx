@@ -1,33 +1,17 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { X, Upload, Image } from "lucide-react";
+import { X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import MenuItemBasicInfo from "./menu/MenuItemBasicInfo";
+import MenuItemAddonSelect from "./menu/MenuItemAddonSelect";
+import MenuItemImageUpload from "./menu/MenuItemImageUpload";
 
 interface MenuItemFormProps {
   onClose: () => void;
   onSuccess: () => void;
-  initialData?: {
-    id: string;
-    name: string;
-    price: number;
-    description: string;
-    category: string;
-    image_url?: string;
-    is_featured?: boolean;
-  };
+  initialData?: MenuItem;
 }
 
 const MenuItemForm = ({ onClose, onSuccess, initialData }: MenuItemFormProps) => {
@@ -71,7 +55,6 @@ const MenuItemForm = ({ onClose, onSuccess, initialData }: MenuItemFormProps) =>
     },
   });
 
-  // Fetch existing addons for this menu item if editing
   useEffect(() => {
     if (initialData?.id) {
       const fetchExistingAddons = async () => {
@@ -88,36 +71,16 @@ const MenuItemForm = ({ onClose, onSuccess, initialData }: MenuItemFormProps) =>
     }
   }, [initialData?.id]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setImageFile(e.target.files[0]);
-    }
+  const handleFormChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const uploadImage = async (file: File) => {
-    const { data: { session }, error: authError } = await supabase.auth.getSession();
-    if (authError || !session) {
-      throw new Error('Authentication required for image upload');
+  const handleAddonChange = (addonId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedAddons([...selectedAddons, addonId]);
+    } else {
+      setSelectedAddons(selectedAddons.filter(id => id !== addonId));
     }
-
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${crypto.randomUUID()}.${fileExt}`;
-    const filePath = fileName;
-
-    const { error: uploadError, data } = await supabase.storage
-      .from('menu-images')
-      .upload(filePath, file, {
-        upsert: false,
-        contentType: file.type
-      });
-
-    if (uploadError) throw uploadError;
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('menu-images')
-      .getPublicUrl(filePath);
-
-    return publicUrl;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -128,7 +91,29 @@ const MenuItemForm = ({ onClose, onSuccess, initialData }: MenuItemFormProps) =>
       let imageUrl = formData.image_url;
 
       if (imageFile) {
-        imageUrl = await uploadImage(imageFile);
+        const { data: { session }, error: authError } = await supabase.auth.getSession();
+        if (authError || !session) {
+          throw new Error('Authentication required for image upload');
+        }
+
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+        const filePath = fileName;
+
+        const { error: uploadError } = await supabase.storage
+          .from('menu-images')
+          .upload(filePath, imageFile, {
+            upsert: false,
+            contentType: imageFile.type
+          });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('menu-images')
+          .getPublicUrl(filePath);
+
+        imageUrl = publicUrl;
       }
 
       const data = {
@@ -138,7 +123,6 @@ const MenuItemForm = ({ onClose, onSuccess, initialData }: MenuItemFormProps) =>
       };
 
       if (initialData?.id) {
-        // Update existing menu item
         const { error } = await supabase
           .from("menu_items")
           .update(data)
@@ -146,7 +130,6 @@ const MenuItemForm = ({ onClose, onSuccess, initialData }: MenuItemFormProps) =>
 
         if (error) throw error;
 
-        // Update addons
         await supabase
           .from("menu_addons")
           .delete()
@@ -167,7 +150,6 @@ const MenuItemForm = ({ onClose, onSuccess, initialData }: MenuItemFormProps) =>
 
         toast({ title: "Menu item updated successfully" });
       } else {
-        // Create new menu item
         const { data: newItem, error } = await supabase
           .from("menu_items")
           .insert([data])
@@ -176,7 +158,6 @@ const MenuItemForm = ({ onClose, onSuccess, initialData }: MenuItemFormProps) =>
         
         if (error) throw error;
 
-        // Insert addons for new menu item
         if (selectedAddons.length > 0 && newItem) {
           const addonRecords = selectedAddons.map(addonId => ({
             menu_item_id: newItem.id,
@@ -224,144 +205,25 @@ const MenuItemForm = ({ onClose, onSuccess, initialData }: MenuItemFormProps) =>
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, name: e.target.value }))
-              }
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="price">Price (₦)</Label>
-            <Input
-              id="price"
-              type="number"
-              min="0"
-              step="0.01"
-              value={formData.price}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  price: parseFloat(e.target.value) || 0,
-                }))
-              }
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
-            <Select
-              value={formData.category}
-              onValueChange={(value) =>
-                setFormData((prev) => ({ ...prev, category: value }))
-              }
-              required
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories?.map((category) => (
-                  <SelectItem key={category.id} value={category.name}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, description: e.target.value }))
-              }
-              required
-            />
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="is_featured"
-              checked={formData.is_featured}
-              onCheckedChange={(checked) =>
-                setFormData((prev) => ({ ...prev, is_featured: checked as boolean }))
-              }
-            />
-            <Label htmlFor="is_featured">Featured Item</Label>
-          </div>
+          <MenuItemBasicInfo
+            formData={formData}
+            categories={categories || []}
+            onChange={handleFormChange}
+          />
 
           {formData.category !== 'addon' && (
-            <div className="space-y-2">
-              <Label>Available Addons</Label>
-              <div className="space-y-2 border rounded-md p-3">
-                {addons?.map((addon) => (
-                  <div key={addon.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`addon-${addon.id}`}
-                      checked={selectedAddons.includes(addon.id)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSelectedAddons([...selectedAddons, addon.id]);
-                        } else {
-                          setSelectedAddons(selectedAddons.filter(id => id !== addon.id));
-                        }
-                      }}
-                    />
-                    <Label htmlFor={`addon-${addon.id}`}>
-                      {addon.name} - ₦{addon.price}
-                    </Label>
-                  </div>
-                ))}
-                {(!addons || addons.length === 0) && (
-                  <p className="text-sm text-gray-500">No addons available</p>
-                )}
-              </div>
-            </div>
+            <MenuItemAddonSelect
+              addons={addons || []}
+              selectedAddons={selectedAddons}
+              onAddonChange={handleAddonChange}
+            />
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="image">Image</Label>
-            <div className="flex items-center gap-4">
-              {(formData.image_url || imageFile) && (
-                <div className="relative w-20 h-20">
-                  <img
-                    src={imageFile ? URL.createObjectURL(imageFile) : formData.image_url}
-                    alt="Preview"
-                    className="w-full h-full object-cover rounded"
-                  />
-                </div>
-              )}
-              <div className="flex-1">
-                <label className="cursor-pointer">
-                  <div className="flex items-center gap-2 p-2 border border-dashed rounded hover:bg-gray-50">
-                    {imageFile ? (
-                      <Upload className="h-5 w-5 text-gray-500" />
-                    ) : (
-                      <Image className="h-5 w-5 text-gray-500" />
-                    )}
-                    <span className="text-sm text-gray-600">
-                      {imageFile ? "Change image" : "Upload image"}
-                    </span>
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleImageChange}
-                  />
-                </label>
-              </div>
-            </div>
-          </div>
+          <MenuItemImageUpload
+            imageUrl={formData.image_url}
+            imageFile={imageFile}
+            onImageChange={setImageFile}
+          />
 
           <div className="flex justify-end space-x-2 pt-4">
             <Button variant="outline" onClick={onClose} disabled={loading}>
