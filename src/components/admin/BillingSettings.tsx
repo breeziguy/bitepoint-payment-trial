@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +7,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface SubscriptionPlan {
   id: string;
@@ -120,6 +122,11 @@ export default function BillingSettings() {
     }
   };
 
+  // Check if subscription is expiring soon (within 7 days)
+  const isExpiringSoon = subscription && (
+    new Date(subscription.current_period_end).getTime() - new Date().getTime()
+  ) / (1000 * 60 * 60 * 24) <= 7;
+
   if (plansLoading || subscriptionLoading) {
     return (
       <div className="space-y-4">
@@ -138,25 +145,37 @@ export default function BillingSettings() {
             <CardDescription>Your subscription details</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="font-medium">Status</span>
-                <Badge variant={subscription.status === "active" ? "default" : "secondary"}>
-                  {subscription.status}
-                </Badge>
-              </div>
-              {subscription.plan_id && (
-                <div className="flex justify-between items-center">
-                  <span className="font-medium">Plan</span>
-                  <span>{plans?.find(p => p.id === subscription.plan_id)?.name}</span>
-                </div>
+            <div className="space-y-4">
+              {isExpiringSoon && (
+                <Alert variant="warning">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Subscription Expiring Soon</AlertTitle>
+                  <AlertDescription>
+                    Your subscription will expire on {new Date(subscription.current_period_end).toLocaleDateString()}. 
+                    Please renew to avoid service interruption. For bank transfer payments, please contact support.
+                  </AlertDescription>
+                </Alert>
               )}
-              <div className="flex justify-between items-center">
-                <span className="font-medium">Current Period</span>
-                <span>
-                  {new Date(subscription.current_period_start).toLocaleDateString()} -{" "}
-                  {new Date(subscription.current_period_end).toLocaleDateString()}
-                </span>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">Status</span>
+                  <Badge variant={subscription.status === "active" ? "default" : "secondary"}>
+                    {subscription.status}
+                  </Badge>
+                </div>
+                {subscription.plan_id && (
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">Plan</span>
+                    <span>{plans?.find(p => p.id === subscription.plan_id)?.name}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">Current Period</span>
+                  <span>
+                    {new Date(subscription.current_period_start).toLocaleDateString()} -{" "}
+                    {new Date(subscription.current_period_end).toLocaleDateString()}
+                  </span>
+                </div>
               </div>
             </div>
           </CardContent>
