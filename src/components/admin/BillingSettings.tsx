@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 interface SubscriptionPlan {
   id: string;
@@ -30,19 +30,25 @@ export default function BillingSettings() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   // Check for Paystack transaction status on component mount
   useEffect(() => {
-    const status = searchParams.get('status');
-    if (status === 'success') {
+    const reference = searchParams.get('reference');
+    if (reference) {
+      // Clear the URL parameters
+      navigate('/admin/settings', { replace: true });
+      
+      // Show success message and refresh data
       toast({
         title: "Payment Successful",
-        description: "Your subscription has been activated successfully.",
+        description: "Your subscription has been activated. Thank you for subscribing!",
       });
+      
       // Refresh subscription data
       queryClient.invalidateQueries({ queryKey: ["store-subscription"] });
     }
-  }, [searchParams, toast, queryClient]);
+  }, [searchParams, toast, queryClient, navigate]);
 
   const { data: plans, isLoading: plansLoading } = useQuery({
     queryKey: ["subscription-plans"],
