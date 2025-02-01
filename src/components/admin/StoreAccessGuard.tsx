@@ -8,8 +8,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { LockIcon } from "lucide-react";
+import { useEffect } from "react";
 
 interface StoreAccessGuardProps {
   children: React.ReactNode;
@@ -17,6 +18,7 @@ interface StoreAccessGuardProps {
 
 export function StoreAccessGuard({ children }: StoreAccessGuardProps) {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const { data: subscription, isLoading } = useQuery({
     queryKey: ["store-subscription"],
@@ -50,11 +52,19 @@ export function StoreAccessGuard({ children }: StoreAccessGuardProps) {
     });
   };
 
+  // Redirect to billing settings on initial load if subscription is expired
+  useEffect(() => {
+    if (isSubscriptionExpired && location.pathname === '/admin') {
+      handleRenewal();
+    }
+  }, [isSubscriptionExpired, location.pathname]);
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
 
-  if (isSubscriptionExpired) {
+  // Don't show the dialog if we're already on the settings page
+  if (isSubscriptionExpired && !location.pathname.includes('/settings')) {
     return (
       <Dialog open={true} onOpenChange={() => {}}>
         <DialogContent 
