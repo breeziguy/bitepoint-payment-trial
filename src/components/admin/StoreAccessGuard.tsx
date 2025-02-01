@@ -46,8 +46,8 @@ export function StoreAccessGuard({ children }: StoreAccessGuardProps) {
   const handleRenewal = () => {
     console.log("Navigating to billing settings...");
     navigate("/admin/settings", { 
-      state: { openTab: "billing" },
-      replace: true 
+      replace: true,
+      state: { tab: "billing" }
     });
   };
 

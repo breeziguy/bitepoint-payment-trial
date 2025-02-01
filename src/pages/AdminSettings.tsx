@@ -59,8 +59,8 @@ export default function AdminSettings() {
 
   useEffect(() => {
     // Check if we have a tab to open from the navigation state
-    if (location.state?.openTab) {
-      setSearchParams({ tab: location.state.openTab });
+    if (location.state?.tab) {
+      setSearchParams({ tab: location.state.tab });
     }
   }, [location.state, setSearchParams]);
 
