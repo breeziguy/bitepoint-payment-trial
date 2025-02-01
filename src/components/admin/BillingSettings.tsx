@@ -127,6 +127,8 @@ export default function BillingSettings() {
     );
   }
 
+  const hasActiveSubscription = subscription?.status === "active";
+
   return (
     <div className="space-y-6">
       {subscription && (
@@ -183,11 +185,11 @@ export default function BillingSettings() {
               <Button
                 className="w-full"
                 onClick={() => handleSubscribe(plan)}
-                disabled={subscription?.status === "active"}
+                disabled={hasActiveSubscription}
               >
                 {subscription?.status === "active" && subscription?.plan_id === plan.id
                   ? "Current Plan"
-                  : subscription?.status === "active"
+                  : hasActiveSubscription
                   ? "Cancel Current Plan First"
                   : "Subscribe"}
               </Button>
