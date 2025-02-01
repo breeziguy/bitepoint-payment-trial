@@ -15,6 +15,8 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json()
+    console.log('Received webhook:', body)
+    
     const hash = req.headers.get('x-paystack-signature')
 
     // Verify webhook signature
@@ -24,6 +26,7 @@ Deno.serve(async (req) => {
       .digest('hex')
 
     if (hash !== expectedHash) {
+      console.error('Invalid signature')
       throw new Error('Invalid signature')
     }
 
@@ -31,8 +34,26 @@ Deno.serve(async (req) => {
 
     // Handle successful payment
     if (event === 'charge.success') {
-      const { metadata, customer } = data
+      console.log('Processing successful charge:', data)
+      
+      const { metadata, customer, reference } = data
       const { plan_id } = metadata
+
+      // Verify the transaction
+      const verifyResponse = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
+        headers: {
+          'Authorization': `Bearer ${PAYSTACK_SECRET_KEY}`,
+        },
+      })
+
+      const verifyData = await verifyResponse.json()
+      
+      if (!verifyData.status) {
+        console.error('Transaction verification failed:', verifyData)
+        throw new Error('Transaction verification failed')
+      }
+
+      console.log('Transaction verified:', verifyData)
 
       // Create or update subscription
       const { error: subscriptionError } = await supabase
@@ -41,20 +62,25 @@ Deno.serve(async (req) => {
           plan_id,
           status: 'active',
           current_period_start: new Date().toISOString(),
-          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
           paystack_email: customer.email,
+          paystack_subscription_code: reference,
           store_id: crypto.randomUUID(), // This should be the actual store ID
         })
 
       if (subscriptionError) {
+        console.error('Error updating subscription:', subscriptionError)
         throw subscriptionError
       }
+
+      console.log('Subscription updated successfully')
     }
 
     return new Response(JSON.stringify({ status: 'success' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {
+    console.error('Webhook error:', error)
     return new Response(JSON.stringify({ error: error.message }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

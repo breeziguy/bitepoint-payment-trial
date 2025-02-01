@@ -1,10 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 
 interface SubscriptionPlan {
   id: string;
@@ -26,6 +28,21 @@ interface StoreSubscription {
 
 export default function BillingSettings() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+
+  // Check for Paystack transaction reference on component mount
+  useEffect(() => {
+    const reference = searchParams.get('reference');
+    if (reference) {
+      toast({
+        title: "Payment Processing",
+        description: "Your payment is being processed. Please wait...",
+      });
+      // Invalidate the subscription query to refresh the data
+      queryClient.invalidateQueries({ queryKey: ["store-subscription"] });
+    }
+  }, [searchParams, toast, queryClient]);
 
   const { data: plans, isLoading: plansLoading } = useQuery({
     queryKey: ["subscription-plans"],
