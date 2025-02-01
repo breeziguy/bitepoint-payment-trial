@@ -32,25 +32,7 @@ export default function BillingSettings() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const reference = searchParams.get('reference');
-    if (reference) {
-      navigate('/subscription/success', { replace: true });
-    }
-  }, [searchParams, navigate]);
-
-  const { data: plans, isLoading: plansLoading } = useQuery({
-    queryKey: ["subscription-plans"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("subscription_plans")
-        .select("*")
-        .order("price");
-      if (error) throw error;
-      return data as SubscriptionPlan[];
-    },
-  });
-
+  // Fetch subscription data
   const { data: subscription, isLoading: subscriptionLoading } = useQuery({
     queryKey: ["store-subscription"],
     queryFn: async () => {
@@ -63,13 +45,37 @@ export default function BillingSettings() {
     },
   });
 
+  // Fetch plans data
+  const { data: plans, isLoading: plansLoading } = useQuery({
+    queryKey: ["subscription-plans"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("subscription_plans")
+        .select("*")
+        .order("price");
+      if (error) throw error;
+      return data as SubscriptionPlan[];
+    },
+  });
+
+  // Handle subscription initiation
   const handleSubscribe = async (plan: SubscriptionPlan) => {
     try {
-      // Check if there's any subscription (active or pending)
-      if (subscription) {
+      // Double-check subscription status before proceeding
+      const { data: latestSubscription, error: subscriptionError } = await supabase
+        .from("store_subscriptions")
+        .select("*")
+        .maybeSingle();
+
+      if (subscriptionError) {
+        console.error('Error checking subscription status:', subscriptionError);
+        throw subscriptionError;
+      }
+
+      if (latestSubscription) {
         toast({
           title: "Subscription Exists",
-          description: subscription.status === 'active' 
+          description: latestSubscription.status === 'active' 
             ? "You already have an active subscription. Please cancel your current subscription before subscribing to a new plan."
             : "You have a pending subscription. Please wait for it to be processed or contact support.",
           variant: "destructive",
@@ -100,6 +106,9 @@ export default function BillingSettings() {
         return;
       }
 
+      // Store the plan ID in session storage to verify after payment
+      sessionStorage.setItem('pending_subscription_plan', plan.id);
+      
       window.location.href = response.data.authorization_url;
     } catch (error) {
       console.error('Payment initialization error:', error);
@@ -108,6 +117,11 @@ export default function BillingSettings() {
       });
     }
   };
+
+  // Check if there's a subscription and it's active or pending
+  const isSubscriptionActive = subscription?.status === 'active';
+  const isSubscriptionPending = subscription?.status === 'pending';
+  const hasSubscription = isSubscriptionActive || isSubscriptionPending;
 
   if (plansLoading || subscriptionLoading) {
     return (
@@ -174,12 +188,14 @@ export default function BillingSettings() {
               <Button
                 className="w-full"
                 onClick={() => handleSubscribe(plan)}
-                disabled={!!subscription}
+                disabled={hasSubscription}
                 variant={subscription?.plan_id === plan.id ? "secondary" : "default"}
               >
-                {subscription?.status === "active" && subscription?.plan_id === plan.id
+                {isSubscriptionActive && subscription?.plan_id === plan.id
                   ? "Current Plan"
-                  : subscription
+                  : isSubscriptionPending
+                  ? "Subscription Pending"
+                  : hasSubscription
                   ? "Cancel Current Plan First"
                   : "Subscribe"}
               </Button>
