@@ -34,21 +34,23 @@ export function SubscriptionBanner() {
   if (daysUntilExpiry > 7) return null;
 
   return (
-    <Alert className="rounded-none border-x-0 border-t-0">
-      <Timer className="h-4 w-4" />
-      <AlertTitle>Subscription Expiring Soon</AlertTitle>
-      <div className="flex items-center justify-between">
-        <AlertDescription>
-          Your subscription will expire in {daysUntilExpiry} days. Please renew to avoid service interruption.
-        </AlertDescription>
-        <Button 
-          variant="outline" 
-          onClick={() => navigate("/admin/settings?tab=billing")}
-          className="ml-4"
-        >
-          Renew Now
-        </Button>
-      </div>
-    </Alert>
+    <div className="sticky top-0 z-50 w-full border-b bg-background">
+      <Alert className="rounded-none border-0 bg-yellow-50">
+        <Timer className="h-4 w-4 text-yellow-600" />
+        <AlertTitle className="text-yellow-800">Subscription Expiring Soon</AlertTitle>
+        <div className="flex items-center justify-between">
+          <AlertDescription className="text-yellow-700">
+            Your subscription will expire in {daysUntilExpiry} days. Please renew to avoid service interruption.
+          </AlertDescription>
+          <Button 
+            variant="outline" 
+            onClick={() => navigate("/admin/settings?tab=billing")}
+            className="ml-4 border-yellow-600 text-yellow-700 hover:bg-yellow-100 hover:text-yellow-800"
+          >
+            Renew Now
+          </Button>
+        </div>
+      </Alert>
+    </div>
   );
 }
