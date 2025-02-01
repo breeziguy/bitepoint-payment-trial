@@ -3,9 +3,15 @@ import { corsHeaders } from '../_shared/cors.ts'
 
 const PAYSTACK_SECRET_KEY = Deno.env.get('PAYSTACK_SECRET_KEY')
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
-const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
-const supabase = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!)
+// Initialize Supabase client with service role key
+const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+})
 
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
@@ -75,7 +81,7 @@ Deno.serve(async (req) => {
 
     console.log('Found plan:', plan)
 
-    // Create or update subscription
+    // Create or update subscription using service role client
     const { data: subscription, error: subscriptionError } = await supabase
       .from('store_subscriptions')
       .upsert({
