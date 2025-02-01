@@ -14,25 +14,38 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const body = await req.json()
-    console.log('Webhook received:', JSON.stringify(body, null, 2))
+    // Get the reference from either the webhook payload or URL parameters
+    const url = new URL(req.url)
+    const urlReference = url.searchParams.get('reference')
     
-    // For test transactions, we'll handle the reference directly
-    const reference = body.data?.reference || req.url.split('reference=')[1]
+    let reference: string | undefined
+    
+    if (req.method === 'GET' && urlReference) {
+      // Handle direct callback from payment page
+      console.log('Processing callback with reference:', urlReference)
+      reference = urlReference
+    } else if (req.method === 'POST') {
+      // Handle webhook event
+      const payload = await req.json()
+      console.log('Received webhook payload:', JSON.stringify(payload, null, 2))
+      reference = payload.data?.reference
+    }
+
     if (!reference) {
-      console.error('No reference found in webhook or URL')
+      console.error('No transaction reference found')
       throw new Error('No transaction reference found')
     }
 
     console.log('Processing transaction reference:', reference)
 
-    // Verify the transaction
+    // Verify the transaction with Paystack
     const verifyResponse = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
       headers: {
         'Authorization': `Bearer ${PAYSTACK_SECRET_KEY}`,
+        'Content-Type': 'application/json',
       },
     })
-    
+
     const verificationData = await verifyResponse.json()
     console.log('Verification response:', JSON.stringify(verificationData, null, 2))
 
@@ -41,7 +54,8 @@ Deno.serve(async (req) => {
       throw new Error('Transaction verification failed')
     }
 
-    const metadata = verificationData.data?.metadata || body.data?.metadata
+    // Get the plan ID from metadata
+    const metadata = verificationData.data?.metadata
     if (!metadata?.plan_id) {
       console.error('No plan ID found in transaction metadata')
       throw new Error('No plan ID found in transaction metadata')
@@ -83,6 +97,18 @@ Deno.serve(async (req) => {
 
     console.log('Subscription updated successfully:', subscription)
 
+    // For GET requests (direct callbacks), redirect back to the billing page
+    if (req.method === 'GET') {
+      return new Response(null, {
+        status: 302,
+        headers: {
+          ...corsHeaders,
+          'Location': `${url.origin}/admin/settings?tab=billing&status=success`,
+        },
+      })
+    }
+
+    // For POST requests (webhooks), return success response
     return new Response(JSON.stringify({ status: 'success' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
