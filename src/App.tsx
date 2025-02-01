@@ -8,6 +8,7 @@ import AdminSettings from "./pages/AdminSettings";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import TrackOrder from "./pages/TrackOrder";
+import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import { useEffect, useState } from "react";
 import { supabase } from "./integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
@@ -58,6 +59,14 @@ const router = createBrowserRouter([
   {
     path: "/track/:token",
     element: <TrackOrder />,
+  },
+  {
+    path: "/subscription/success",
+    element: (
+      <ProtectedRoute>
+        <SubscriptionSuccess />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/admin",

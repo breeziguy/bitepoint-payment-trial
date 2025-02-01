@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         amount: amount * 100,
         email: 'mrolabola@gmail.com',
-        callback_url: `${req.headers.get('origin')}/admin`,
+        callback_url: `${req.headers.get('origin')}/subscription/success`,
         metadata: {
           plan_id,
           custom_fields: [

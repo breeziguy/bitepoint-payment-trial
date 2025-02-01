@@ -36,19 +36,10 @@ export default function BillingSettings() {
   useEffect(() => {
     const reference = searchParams.get('reference');
     if (reference) {
-      // Clear the URL parameters
-      navigate('/admin/settings', { replace: true });
-      
-      // Show success message and refresh data
-      toast({
-        title: "Payment Successful",
-        description: "Your subscription has been activated. Thank you for subscribing!",
-      });
-      
-      // Refresh subscription data
-      queryClient.invalidateQueries({ queryKey: ["store-subscription"] });
+      // Navigate to success page
+      navigate('/subscription/success', { replace: true });
     }
-  }, [searchParams, toast, queryClient, navigate]);
+  }, [searchParams, navigate]);
 
   const { data: plans, isLoading: plansLoading } = useQuery({
     queryKey: ["subscription-plans"],
