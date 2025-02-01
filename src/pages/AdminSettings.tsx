@@ -7,8 +7,13 @@ import BillingSettings from "@/components/admin/BillingSettings";
 import StoreSettingsTab from "@/components/admin/settings/StoreSettingsTab";
 import DeliverySettingsTab from "@/components/admin/settings/DeliverySettingsTab";
 import BrandingSettingsTab from "@/components/admin/settings/BrandingSettingsTab";
+import { useSearchParams } from "react-router-dom";
+import { useEffect } from "react";
 
 export default function AdminSettings() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentTab = searchParams.get("tab") || "store";
+
   const { data: storeSettings, isLoading: settingsLoading } = useQuery({
     queryKey: ["store-settings"],
     queryFn: async () => {
@@ -50,11 +55,19 @@ export default function AdminSettings() {
     },
   });
 
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab) {
+      // Set the active tab based on URL parameter
+      setSearchParams({ tab });
+    }
+  }, [searchParams, setSearchParams]);
+
   return (
     <div className="p-8 space-y-8">
       <h1 className="text-3xl font-bold">Settings</h1>
       
-      <Tabs defaultValue="store" className="w-full">
+      <Tabs value={currentTab} onValueChange={(value) => setSearchParams({ tab: value })} className="w-full">
         <TabsList>
           <TabsTrigger value="store">Store Settings</TabsTrigger>
           <TabsTrigger value="delivery">Delivery Settings</TabsTrigger>

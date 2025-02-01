@@ -7,9 +7,9 @@ export default function SubscriptionSuccess() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Auto-redirect after 5 seconds
+    // Auto-redirect after 5 seconds to billing tab
     const timer = setTimeout(() => {
-      navigate("/admin/settings");
+      navigate("/admin/settings?tab=billing");
     }, 5000);
 
     return () => clearTimeout(timer);
@@ -28,10 +28,10 @@ export default function SubscriptionSuccess() {
           </p>
           <div className="mt-8 space-y-4">
             <Button
-              onClick={() => navigate("/admin/settings")}
+              onClick={() => navigate("/admin/settings?tab=billing")}
               className="w-full"
             >
-              Go to Settings
+              Go to Billing Settings
             </Button>
             <Button
               onClick={() => navigate("/admin")}
