@@ -7,8 +7,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Check } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
 
 interface SubscriptionPlan {
   id: string;
@@ -28,11 +29,27 @@ interface StoreSubscription {
   paystack_subscription_code: string | null;
 }
 
+const featureDescriptions: Record<string, string> = {
+  menu_items: "Menu Items Limit",
+  support: "Support Level",
+  whatsapp_integration: "WhatsApp Integration",
+  custom_domain: "Custom Domain",
+  pos_integration: "POS Integration",
+  priority_support: "Priority Support",
+  advanced_analytics: "Advanced Analytics",
+  multi_location: "Multi-location Support",
+  custom_design: "Custom Design",
+  online_payments: "Online Payments",
+  ai_automated_orders: "AI Automated Orders",
+  staff_management: "Staff Management",
+  inventory_management: "Inventory Management",
+  api_access: "API Access"
+};
+
 export default function BillingSettings() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Fetch subscription data
   const { data: subscription, isLoading: subscriptionLoading } = useQuery({
     queryKey: ["store-subscription"],
     queryFn: async () => {
@@ -49,7 +66,6 @@ export default function BillingSettings() {
     },
   });
 
-  // Fetch plans data
   const { data: plans, isLoading: plansLoading } = useQuery({
     queryKey: ["subscription-plans"],
     queryFn: async () => {
@@ -62,10 +78,8 @@ export default function BillingSettings() {
     },
   });
 
-  // Handle subscription initiation
   const handleSubscribe = async (plan: SubscriptionPlan) => {
     try {
-      // Double-check subscription status before proceeding
       const { data: activeSubscription, error: subscriptionError } = await supabase
         .from("store_subscriptions")
         .select("*")
@@ -109,10 +123,8 @@ export default function BillingSettings() {
         });
         return;
       }
-
-      // Store the plan ID in session storage to verify after payment
-      sessionStorage.setItem('pending_subscription_plan', plan.id);
       
+      sessionStorage.setItem('pending_subscription_plan', plan.id);
       window.location.href = response.data.authorization_url;
     } catch (error) {
       console.error('Payment initialization error:', error);
@@ -121,11 +133,6 @@ export default function BillingSettings() {
       });
     }
   };
-
-  // Check if subscription is expiring soon (within 7 days)
-  const isExpiringSoon = subscription && (
-    new Date(subscription.current_period_end).getTime() - new Date().getTime()
-  ) / (1000 * 60 * 60 * 24) <= 7;
 
   if (plansLoading || subscriptionLoading) {
     return (
@@ -146,16 +153,6 @@ export default function BillingSettings() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {isExpiringSoon && (
-                <Alert variant="warning">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Subscription Expiring Soon</AlertTitle>
-                  <AlertDescription>
-                    Your subscription will expire on {new Date(subscription.current_period_end).toLocaleDateString()}. 
-                    Please renew to avoid service interruption. For bank transfer payments, please contact support.
-                  </AlertDescription>
-                </Alert>
-              )}
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="font-medium">Status</span>
@@ -184,18 +181,32 @@ export default function BillingSettings() {
 
       <div className="grid gap-4 md:grid-cols-3">
         {plans?.map((plan) => (
-          <Card key={plan.id}>
+          <Card key={plan.id} className={cn(
+            "relative",
+            plan.name === "Professional Plan" && "border-primary shadow-lg"
+          )}>
+            {plan.name === "Professional Plan" && (
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                <Badge className="bg-primary">Most Popular</Badge>
+              </div>
+            )}
             <CardHeader>
               <CardTitle>{plan.name}</CardTitle>
               <CardDescription>{plan.description}</CardDescription>
+              <div className="mt-4">
+                <div className="text-3xl font-bold">₦{(plan.price / 100).toLocaleString()}</div>
+                <div className="text-sm text-muted-foreground">per month</div>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">₦{(plan.price / 100).toLocaleString()}</div>
-              <div className="mt-4 space-y-2">
+              <div className="space-y-4">
                 {plan.features && Object.entries(plan.features).map(([key, value]) => (
-                  <div key={key} className="flex items-center gap-2">
-                    <span className="capitalize">{key.replace(/_/g, " ")}:</span>
-                    <span>{value}</span>
+                  <div key={key} className="flex items-start gap-2">
+                    <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-medium">{featureDescriptions[key] || key}: </span>
+                      <span>{value === true ? "Yes" : value}</span>
+                    </div>
                   </div>
                 ))}
               </div>
