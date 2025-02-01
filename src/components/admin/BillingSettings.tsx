@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 interface SubscriptionPlan {
   id: string;
@@ -28,8 +28,6 @@ interface StoreSubscription {
 
 export default function BillingSettings() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
   // Fetch subscription data
@@ -39,7 +37,11 @@ export default function BillingSettings() {
       const { data, error } = await supabase
         .from("store_subscriptions")
         .select("*")
+        .eq("paystack_email", "mrolabola@gmail.com")
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
         .maybeSingle();
+
       if (error) throw error;
       return data as StoreSubscription | null;
     },
@@ -62,9 +64,11 @@ export default function BillingSettings() {
   const handleSubscribe = async (plan: SubscriptionPlan) => {
     try {
       // Double-check subscription status before proceeding
-      const { data: latestSubscription, error: subscriptionError } = await supabase
+      const { data: activeSubscription, error: subscriptionError } = await supabase
         .from("store_subscriptions")
         .select("*")
+        .eq("paystack_email", "mrolabola@gmail.com")
+        .eq("status", "active")
         .maybeSingle();
 
       if (subscriptionError) {
@@ -72,12 +76,10 @@ export default function BillingSettings() {
         throw subscriptionError;
       }
 
-      if (latestSubscription) {
+      if (activeSubscription) {
         toast({
           title: "Subscription Exists",
-          description: latestSubscription.status === 'active' 
-            ? "You already have an active subscription. Please cancel your current subscription before subscribing to a new plan."
-            : "You have a pending subscription. Please wait for it to be processed or contact support.",
+          description: "You already have an active subscription. Please cancel your current subscription before subscribing to a new plan.",
           variant: "destructive",
         });
         return;
@@ -117,11 +119,6 @@ export default function BillingSettings() {
       });
     }
   };
-
-  // Check if there's a subscription and it's active or pending
-  const isSubscriptionActive = subscription?.status === 'active';
-  const isSubscriptionPending = subscription?.status === 'pending';
-  const hasSubscription = isSubscriptionActive || isSubscriptionPending;
 
   if (plansLoading || subscriptionLoading) {
     return (
@@ -188,14 +185,12 @@ export default function BillingSettings() {
               <Button
                 className="w-full"
                 onClick={() => handleSubscribe(plan)}
-                disabled={hasSubscription}
+                disabled={!!subscription}
                 variant={subscription?.plan_id === plan.id ? "secondary" : "default"}
               >
-                {isSubscriptionActive && subscription?.plan_id === plan.id
+                {subscription?.plan_id === plan.id
                   ? "Current Plan"
-                  : isSubscriptionPending
-                  ? "Subscription Pending"
-                  : hasSubscription
+                  : subscription
                   ? "Cancel Current Plan First"
                   : "Subscribe"}
               </Button>

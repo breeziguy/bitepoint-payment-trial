@@ -1,12 +1,11 @@
 import { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function SubscriptionSuccess() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     const verifySubscription = async () => {
@@ -27,6 +26,8 @@ export default function SubscriptionSuccess() {
         const { data: existingSubscription, error: checkError } = await supabase
           .from("store_subscriptions")
           .select("*")
+          .eq("paystack_email", "mrolabola@gmail.com")
+          .eq("status", "active")
           .maybeSingle();
 
         if (checkError) {
