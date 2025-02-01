@@ -9,9 +9,11 @@ import DeliverySettingsTab from "@/components/admin/settings/DeliverySettingsTab
 import BrandingSettingsTab from "@/components/admin/settings/BrandingSettingsTab";
 import { useSearchParams } from "react-router-dom";
 import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
 export default function AdminSettings() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const currentTab = searchParams.get("tab") || "store";
 
   const { data: storeSettings, isLoading: settingsLoading } = useQuery({
@@ -56,11 +58,11 @@ export default function AdminSettings() {
   });
 
   useEffect(() => {
-    const tab = searchParams.get("tab");
-    if (tab) {
-      setSearchParams({ tab });
+    // Check if we have a tab to open from the navigation state
+    if (location.state?.openTab) {
+      setSearchParams({ tab: location.state.openTab });
     }
-  }, [searchParams, setSearchParams]);
+  }, [location.state, setSearchParams]);
 
   return (
     <div className="p-8 space-y-8">

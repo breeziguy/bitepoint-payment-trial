@@ -10,7 +10,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { LockIcon } from "lucide-react";
-import { useEffect } from "react";
 
 interface StoreAccessGuardProps {
   children: React.ReactNode;
@@ -45,7 +44,11 @@ export function StoreAccessGuard({ children }: StoreAccessGuardProps) {
 
   // Handle renewal navigation
   const handleRenewal = () => {
-    navigate("/admin/settings?tab=billing");
+    console.log("Navigating to billing settings...");
+    navigate("/admin/settings", { 
+      state: { openTab: "billing" },
+      replace: true 
+    });
   };
 
   if (isLoading) {
@@ -55,7 +58,11 @@ export function StoreAccessGuard({ children }: StoreAccessGuardProps) {
   if (isSubscriptionExpired) {
     return (
       <Dialog open={true} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
+        <DialogContent 
+          className="sm:max-w-md" 
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
               <LockIcon className="h-6 w-6 text-red-600" />
