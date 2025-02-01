@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import TrackOrder from "./pages/TrackOrder";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
+import SubscriptionError from "./pages/SubscriptionError";
 import { useEffect, useState } from "react";
 import { supabase } from "./integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
@@ -65,6 +66,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <SubscriptionSuccess />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/subscription/error",
+    element: (
+      <ProtectedRoute>
+        <SubscriptionError />
       </ProtectedRoute>
     ),
   },

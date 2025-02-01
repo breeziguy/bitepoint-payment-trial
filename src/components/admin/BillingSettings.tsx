@@ -65,7 +65,6 @@ export default function BillingSettings() {
 
   const handleSubscribe = async (plan: SubscriptionPlan) => {
     try {
-      // Check if user has an active subscription for this plan
       if (subscription?.status === "active" && subscription?.plan_id === plan.id) {
         toast({
           title: "Already Subscribed",
@@ -75,7 +74,6 @@ export default function BillingSettings() {
         return;
       }
 
-      // Check if user has any active subscription
       if (subscription?.status === "active") {
         toast({
           title: "Active Subscription",
@@ -85,8 +83,6 @@ export default function BillingSettings() {
         return;
       }
 
-      console.log('Initializing payment for plan:', plan);
-      
       const response = await supabase.functions.invoke('paystack', {
         body: {
           plan_id: plan.id,
@@ -94,26 +90,27 @@ export default function BillingSettings() {
         },
       });
 
-      console.log('Paystack function response:', response);
-
       if (response.error) {
         console.error('Payment initialization error:', response.error);
-        throw new Error(response.error.message);
+        navigate('/subscription/error', { 
+          state: { error: response.error.message }
+        });
+        return;
       }
 
       if (!response.data || !response.data.authorization_url) {
         console.error('Invalid response data:', response.data);
-        throw new Error('Failed to get payment authorization URL');
+        navigate('/subscription/error', {
+          state: { error: 'Failed to get payment authorization URL' }
+        });
+        return;
       }
 
-      // Redirect to Paystack checkout
       window.location.href = response.data.authorization_url;
     } catch (error) {
       console.error('Payment initialization error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to initialize subscription. Please try again.",
-        variant: "destructive",
+      navigate('/subscription/error', {
+        state: { error: 'Failed to initialize subscription' }
       });
     }
   };
@@ -186,6 +183,7 @@ export default function BillingSettings() {
                 className="w-full"
                 onClick={() => handleSubscribe(plan)}
                 disabled={hasActiveSubscription}
+                variant={subscription?.plan_id === plan.id ? "secondary" : "default"}
               >
                 {subscription?.status === "active" && subscription?.plan_id === plan.id
                   ? "Current Plan"
