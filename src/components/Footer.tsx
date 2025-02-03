@@ -46,7 +46,7 @@ export function Footer() {
               </svg>
             </div>
             <p className="text-sm font-medium text-[#25262B]">
-              Create your Take App
+              Create your Bitepoint App
             </p>
           </div>
         </div>
