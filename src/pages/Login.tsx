@@ -25,9 +25,7 @@ export default function Login() {
 
       if (error) throw error;
 
-      navigate("/admin/settings", { 
-        state: { tab: "billing" }
-      });
+      navigate("/admin");
     } catch (error: any) {
       toast({
         title: "Error",

@@ -34,7 +34,7 @@ export const generateOrderMessage = ({
       const addons = item.addons
         ?.map((addon) => `\n   + ${addon.name} (${formatPrice(addon.price)})`)
         .join('') || '';
-      return `\n• ${item.quantity}x ${item.name}${addons}`;
+      return `\n• *${item.quantity}x ${item.name}* ${addons}`;
     })
     .join('');
 
@@ -43,23 +43,23 @@ export const generateOrderMessage = ({
     : 'Pickup';
 
   const message = 
-`*New Order #${orderId}*
+`🛍️ *New Order #${orderId.slice(0, 8)}*
 
-Customer Details:
+👤 *Customer Details:*
 Name: ${checkoutForm.name}
 Phone: ${checkoutForm.whatsapp}
 
-Items:${itemsList}
+📝 *Order Items:*${itemsList}
 
-Order Summary:
-Subtotal: ${formatPrice(subtotal)}
-${checkoutForm.deliveryType === 'delivery' ? `Delivery Fee: ${formatPrice(deliveryFee)}\n` : ''}Total: ${formatPrice(total)}
+💰 *Order Summary:*
+Subtotal: *${formatPrice(subtotal)}*
+${checkoutForm.deliveryType === 'delivery' ? `Delivery Fee: *${formatPrice(deliveryFee)}*\n` : ''}Total: *${formatPrice(total)}*
 
-Delivery Method: ${checkoutForm.deliveryType === 'delivery' ? 'Delivery' : 'Pickup'}
-${checkoutForm.deliveryType === 'delivery' ? `Delivery Zone: ${selectedZoneName}` : ''}
-Address: ${deliveryDetails}
+🚚 *Delivery Details:*
+Method: ${checkoutForm.deliveryType === 'delivery' ? 'Delivery' : 'Pickup'}
+${checkoutForm.deliveryType === 'delivery' ? `Zone: ${selectedZoneName}\n` : ''}Address: ${deliveryDetails}
 
-Track Order: ${trackingUrl}`;
+🔍 Track Order: ${trackingUrl}`;
 
   return message;
 };

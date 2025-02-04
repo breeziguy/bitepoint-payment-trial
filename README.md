@@ -4,61 +4,62 @@
 
 **URL**: https://lovable.dev/projects/bcf782c0-c369-43f7-8fa9-0bbb0b5dd7e0
 
-## How can I edit this code?
+## Installation & Development
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/bcf782c0-c369-43f7-8fa9-0bbb0b5dd7e0) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+1. Clone the repository
+2. Install dependencies:
+```bash
+npm install
+```
+3. Start the development server:
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Deployment Instructions
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Deploying to Vercel
 
-**Use GitHub Codespaces**
+1. Fork or clone this repository to your GitHub account
+2. Go to [Vercel](https://vercel.com)
+3. Click "New Project"
+4. Import your GitHub repository
+5. Configure your project:
+   - Framework Preset: Vite
+   - Build Command: `npm run build`
+   - Output Directory: `dist`
+6. Click "Deploy"
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Deploying to Netlify
 
-## What technologies are used for this project?
+1. Fork or clone this repository to your GitHub account
+2. Go to [Netlify](https://netlify.com)
+3. Click "New site from Git"
+4. Choose your repository
+5. Configure your build settings:
+   - Build Command: `npm run build`
+   - Publish Directory: `dist`
+6. Click "Deploy site"
 
-This project is built with .
+## Environment Variables
+
+Make sure to set these environment variables in your deployment platform:
+
+```
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+## Technologies Used
+
+This project is built with:
 
 - Vite
 - TypeScript
 - React
 - shadcn-ui
 - Tailwind CSS
+- Supabase
 
 ## How can I deploy this project?
 
