@@ -143,8 +143,13 @@ const Cart = ({ open, onClose }: CartProps) => {
 
       const trackingUrl = `${window.location.origin}/track/${trackingData.tracking_token}`;
 
-      const whatsappNumber = storeSettings?.whatsapp_number;
-      if (!whatsappNumber) {
+      const { data: settings, error: settingsError } = await supabase
+        .from("store_settings")
+        .select("whatsapp_number")
+        .limit(1)
+        .single();
+
+      if (settingsError || !settings?.whatsapp_number) {
         throw new Error("Store contact information is not available");
       }
 
@@ -160,9 +165,9 @@ const Cart = ({ open, onClose }: CartProps) => {
         calculateItemTotal,
       });
 
-      const whatsappLink = `https://wa.me/${whatsappNumber.replace(/\+/g, "")}?text=${encodeURIComponent(
-        orderMessage
-      )}`;
+      // Clean the phone number and ensure it starts with the country code
+      const phoneNumber = settings.whatsapp_number.replace(/\D/g, '');
+      const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(orderMessage)}`;
       
       clearCart();
       setCheckoutForm({
@@ -173,13 +178,15 @@ const Cart = ({ open, onClose }: CartProps) => {
       setShowCheckoutForm(false);
       onClose();
       
-      window.open(whatsappLink, "_blank");
+      // Open WhatsApp in the same window
+      window.location.href = whatsappUrl;
       
       toast({
         title: "Order placed successfully",
-        description: "You will be redirected to WhatsApp to complete your order.",
+        description: "Redirecting to WhatsApp to complete your order...",
       });
     } catch (error) {
+      console.error('Checkout error:', error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
