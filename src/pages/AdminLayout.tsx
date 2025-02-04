@@ -8,11 +8,11 @@ export default function AdminLayout() {
   return (
     <StoreAccessGuard>
       <SidebarProvider>
-        <div className="flex min-h-screen w-full">
+        <div className="flex flex-col md:flex-row min-h-screen w-full">
           <AdminSidebar />
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <SubscriptionBanner />
-            <main className="p-8">
+            <main className="p-4 md:p-8">
               <Outlet />
             </main>
           </div>

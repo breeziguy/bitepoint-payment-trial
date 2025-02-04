@@ -38,7 +38,7 @@ export function AdminSidebar() {
   const location = useLocation();
 
   return (
-    <Sidebar>
+    <Sidebar className="w-full md:w-64 shrink-0">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Admin Panel</SidebarGroupLabel>
