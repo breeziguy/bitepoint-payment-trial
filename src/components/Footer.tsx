@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 export function Footer() {
   return (
-    <div className="flex justify-center mb-8">
+    <div className="flex justify-center mb-8 bg-gray-50">
       <div className="flex items-center gap-2 border border-gray-100/20 rounded-full px-3 py-2 shadow-sm bg-white">
         <div className="cursor-default">
           <svg 
