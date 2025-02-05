@@ -1,82 +1,69 @@
-# Food Frenzy
+# Restaurant Management System
 
-A modern food ordering platform built with React, TypeScript, and Supabase.
-
-## Installation & Development
-
-1. Clone the repository
-2. Install dependencies:
-```bash
-npm install
-```
-3. Start the development server:
-```bash
-npm run dev
-```
+A full-featured restaurant management system built with React, Vite, and Supabase.
 
 ## Deployment Instructions
 
 ### Deploying to Vercel
 
-1. Fork or clone this repository to your GitHub account
-2. Go to [Vercel](https://vercel.com)
-3. Click "New Project"
-4. Import your GitHub repository
-5. Configure your project:
-   - Framework Preset: Vite
-   - Build Command: `npm run build`
-   - Output Directory: `dist`
-6. Set up environment variables:
+1. Fork or clone this repository
+2. Create a new project on Vercel
+3. Connect your GitHub repository to Vercel
+4. Add the following environment variables in Vercel:
    ```
    VITE_SUPABASE_URL=your_supabase_url
    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
    ```
-7. Click "Deploy"
+5. Deploy! Vercel will automatically detect it's a Vite project and use the correct build settings
 
 ### Deploying to Netlify
 
-1. Fork or clone this repository to your GitHub account
-2. Go to [Netlify](https://netlify.com)
-3. Click "New site from Git"
-4. Choose your repository
-5. Configure your build settings:
-   - Build Command: `npm run build`
-   - Publish Directory: `dist`
-6. Set up environment variables:
+1. Fork or clone this repository
+2. Create a new site on Netlify
+3. Connect your GitHub repository to Netlify
+4. Configure the build settings:
+   - Build command: `npm run build`
+   - Publish directory: `dist`
+5. Add the following environment variables in Netlify:
    ```
    VITE_SUPABASE_URL=your_supabase_url
    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
    ```
-7. Click "Deploy site"
+6. Deploy! Netlify will build and deploy your site
 
-## Features
+## Development
 
-- Online food ordering system
-- Real-time order tracking
-- Admin dashboard with analytics
-- Menu management
-- Category management
-- Order management
-- WhatsApp integration
-- Subscription management
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-## Technologies Used
+2. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-- Supabase
-- React Query
-- React Router
-- Recharts for analytics
+3. Build for production:
+   ```bash
+   npm run build
+   ```
 
 ## Environment Variables
 
-Make sure to set these environment variables in your deployment platform:
+Create a `.env` file in the root directory with the following variables:
 
 ```
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
+
+## Features
+
+- Menu Management
+- Order Processing
+- Category Management
+- User Authentication
+- Admin Dashboard
+- Real-time Updates
+- WhatsApp Integration
+- Payment Processing
