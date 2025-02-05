@@ -7,6 +7,7 @@ export const formatPrice = (price: number) => {
     return '₦0';
   }
 
+  // Format the number without multiplying by 1000
   return new Intl.NumberFormat('en-NG', {
     style: 'currency',
     currency: 'NGN',

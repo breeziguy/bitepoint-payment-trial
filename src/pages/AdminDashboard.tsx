@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartBarIcon, ListIcon, DollarSign } from "lucide-react";
+import { formatPrice } from "@/utils/formatPrice";
 
 export default function AdminDashboard() {
   const { data: recentOrders, isLoading: ordersLoading } = useQuery({
@@ -46,13 +47,6 @@ export default function AdminDashboard() {
       };
     },
   });
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN'
-    }).format(price * 1000);
-  };
 
   return (
     <div className="space-y-8">

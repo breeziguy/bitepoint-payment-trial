@@ -34,32 +34,33 @@ export const generateOrderMessage = ({
       const addons = item.addons
         ?.map((addon) => `\n   + ${addon.name} (${formatPrice(addon.price)})`)
         .join('') || '';
-      return `\n• *${item.quantity}x ${item.name}* ${addons}`;
+      return `\`${item.quantity}x ${item.name} - ${formatPrice(item.price)}\`${addons}`;
     })
-    .join('');
-
-  const deliveryDetails = checkoutForm.deliveryType === 'delivery'
-    ? `${checkoutForm.streetAddress}${checkoutForm.unitNumber ? `, Unit ${checkoutForm.unitNumber}` : ''}\n${selectedZoneName}`
-    : 'Pickup';
+    .join('\n');
 
   const message = 
-`🛍️ *New Order #${orderId.slice(0, 8)}*
+`*New Order #${orderId.slice(0, 8)}*
 
-👤 *Customer Details:*
+> ${checkoutForm.deliveryType.toUpperCase()}
+
+${itemsList}
+
+> Order Summary:
+Items: ${formatPrice(subtotal)}
+${checkoutForm.deliveryType === 'delivery' ? `Delivery: ${formatPrice(deliveryFee)}\n` : ''}
+*Total: ${formatPrice(total)}*
+
+> Customer Details:
 Name: ${checkoutForm.name}
-Phone: ${checkoutForm.whatsapp}
+WhatsApp: ${checkoutForm.whatsapp}
+Service: ${checkoutForm.deliveryType}
 
-📝 *Order Items:*${itemsList}
+${checkoutForm.deliveryType === 'delivery' ? `> Delivery Address:
+${checkoutForm.streetAddress}
+${checkoutForm.unitNumber ? `Unit ${checkoutForm.unitNumber}\n` : ''}
+${selectedZoneName}` : '> Pickup'}
 
-💰 *Order Summary:*
-Subtotal: *${formatPrice(subtotal)}*
-${checkoutForm.deliveryType === 'delivery' ? `Delivery Fee: *${formatPrice(deliveryFee)}*\n` : ''}Total: *${formatPrice(total)}*
-
-🚚 *Delivery Details:*
-Method: ${checkoutForm.deliveryType === 'delivery' ? 'Delivery' : 'Pickup'}
-${checkoutForm.deliveryType === 'delivery' ? `Zone: ${selectedZoneName}\n` : ''}Address: ${deliveryDetails}
-
-🔍 Track Order: ${trackingUrl}`;
+Track your order here: ${trackingUrl}`;
 
   return message;
 };
