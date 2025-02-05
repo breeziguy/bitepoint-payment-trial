@@ -1,15 +1,13 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import MenuSection from "@/components/MenuSection";
-import { useCart } from "@/components/CartContext";
 import Cart from "@/components/Cart";
 import FloatingCartBar from "@/components/FloatingCartBar";
-import { useState } from "react";
 import ProductDialog from "@/components/ProductDialog";
 import type { MenuItem } from "@/types/menu";
 
 export default function Index() {
-  const { addToCart } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [showProductDialog, setShowProductDialog] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<MenuItem | null>(null);
@@ -50,7 +48,10 @@ export default function Index() {
         </div>
       </div>
 
-      <Cart open={isCartOpen} onClose={() => setIsCartOpen(false)} />
+      <Cart 
+        open={isCartOpen} 
+        onClose={() => setIsCartOpen(false)} 
+      />
       
       <FloatingCartBar onCartClick={() => setIsCartOpen(true)} />
 
