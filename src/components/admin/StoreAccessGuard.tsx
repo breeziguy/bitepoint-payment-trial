@@ -52,9 +52,10 @@ export function StoreAccessGuard({ children }: StoreAccessGuardProps) {
     });
   };
 
-  // Redirect to billing settings on initial load if subscription is expired
+  // Only redirect to billing settings on initial load if subscription is expired
+  // and we're not already on the settings page
   useEffect(() => {
-    if (isSubscriptionExpired && location.pathname === '/admin') {
+    if (isSubscriptionExpired && !location.pathname.includes('/settings')) {
       handleRenewal();
     }
   }, [isSubscriptionExpired, location.pathname]);

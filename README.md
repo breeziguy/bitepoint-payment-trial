@@ -1,8 +1,6 @@
-# Welcome to your Lovable project
+# Food Frenzy
 
-## Project info
-
-**URL**: https://lovable.dev/projects/bcf782c0-c369-43f7-8fa9-0bbb0b5dd7e0
+A modern food ordering platform built with React, TypeScript, and Supabase.
 
 ## Installation & Development
 
@@ -28,7 +26,12 @@ npm run dev
    - Framework Preset: Vite
    - Build Command: `npm run build`
    - Output Directory: `dist`
-6. Click "Deploy"
+6. Set up environment variables:
+   ```
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+7. Click "Deploy"
 
 ### Deploying to Netlify
 
@@ -39,7 +42,35 @@ npm run dev
 5. Configure your build settings:
    - Build Command: `npm run build`
    - Publish Directory: `dist`
-6. Click "Deploy site"
+6. Set up environment variables:
+   ```
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+7. Click "Deploy site"
+
+## Features
+
+- Online food ordering system
+- Real-time order tracking
+- Admin dashboard with analytics
+- Menu management
+- Category management
+- Order management
+- WhatsApp integration
+- Subscription management
+
+## Technologies Used
+
+- Vite
+- TypeScript
+- React
+- shadcn-ui
+- Tailwind CSS
+- Supabase
+- React Query
+- React Router
+- Recharts for analytics
 
 ## Environment Variables
 
@@ -49,22 +80,3 @@ Make sure to set these environment variables in your deployment platform:
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
-
-## Technologies Used
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-- Supabase
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/bcf782c0-c369-43f7-8fa9-0bbb0b5dd7e0) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)

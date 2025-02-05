@@ -31,6 +31,8 @@ const CategoryForm = ({ onClose, onSuccess }: CategoryFormProps) => {
       if (error) throw error;
       return data;
     },
+    staleTime: 1000, // Keep data fresh for 1 second
+    cacheTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -124,7 +126,7 @@ const CategoryForm = ({ onClose, onSuccess }: CategoryFormProps) => {
           ) : categories?.length === 0 ? (
             <p className="text-sm text-gray-500">No categories found</p>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-2 max-h-[300px] overflow-y-auto">
               {categories?.map((category) => (
                 <div
                   key={category.id}

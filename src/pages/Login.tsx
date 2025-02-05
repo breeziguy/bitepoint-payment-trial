@@ -25,7 +25,7 @@ export default function Login() {
 
       if (error) throw error;
 
-      navigate("/admin");
+      navigate("/admin"); // Redirect to dashboard instead of billing
     } catch (error: any) {
       toast({
         title: "Error",
@@ -41,6 +41,11 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
+          <img 
+            src="/lovable-uploads/7f61132e-33b5-4372-98bf-302459f06a0b.png" 
+            alt="Food Frenzy" 
+            className="mx-auto h-12 w-auto"
+          />
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Admin Login
           </h2>
