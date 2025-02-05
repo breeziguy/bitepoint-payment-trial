@@ -27,7 +27,7 @@ export default function Index() {
             <img 
               src="/lovable-uploads/7f61132e-33b5-4372-98bf-302459f06a0b.png" 
               alt="Store Logo" 
-              className="h-8 w-auto" // Reduced size from h-12 to h-8
+              className="h-8 w-auto"
             />
           </div>
           <Link to="/admin">
@@ -62,7 +62,6 @@ export default function Index() {
             setShowProductDialog(false);
             setSelectedProduct(null);
           }}
-          onAddToCart={addToCart}
         />
       )}
     </div>
