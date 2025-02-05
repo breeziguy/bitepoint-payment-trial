@@ -32,7 +32,7 @@ const CategoryForm = ({ onClose, onSuccess }: CategoryFormProps) => {
       return data;
     },
     staleTime: 1000, // Keep data fresh for 1 second
-    cacheTime: 5 * 60 * 1000, // Cache for 5 minutes
+    gcTime: 5 * 60 * 1000, // Cache for 5 minutes (renamed from cacheTime)
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
