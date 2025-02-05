@@ -6,15 +6,16 @@ import Cart from "@/components/Cart";
 import FloatingCartBar from "@/components/FloatingCartBar";
 import { useState } from "react";
 import ProductDialog from "@/components/ProductDialog";
+import type { MenuItem } from "@/types/menu";
 
 export default function Index() {
   const { addToCart } = useCart();
-  const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
+  const [isCartOpen, setIsCartOpen] = useState(false);
   const [showProductDialog, setShowProductDialog] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<MenuItem | null>(null);
 
   const handleAddToCart = (item: MenuItem) => {
-    setSelectedItem(item);
+    setSelectedProduct(item);
     setShowProductDialog(true);
   };
 
@@ -43,26 +44,24 @@ export default function Index() {
 
             <div>
               <h2 className="text-2xl font-semibold mb-4">Menu</h2>
-              <MenuSection onAddToCart={handleAddToCart} category={selectedCategory} />
+              <MenuSection onAddToCart={handleAddToCart} />
             </div>
-          </div>
-
-          <div className="md:col-span-1">
-            <Cart />
           </div>
         </div>
       </div>
 
-      <FloatingCartBar />
+      <Cart open={isCartOpen} onClose={() => setIsCartOpen(false)} />
+      
+      <FloatingCartBar onCartClick={() => setIsCartOpen(true)} />
 
-      {showProductDialog && selectedItem && (
+      {showProductDialog && selectedProduct && (
         <ProductDialog
-          item={selectedItem}
+          product={selectedProduct}
+          isOpen={showProductDialog}
           onClose={() => {
             setShowProductDialog(false);
-            setSelectedItem(null);
+            setSelectedProduct(null);
           }}
-          onAddToCart={addToCart}
         />
       )}
     </div>
