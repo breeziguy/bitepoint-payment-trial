@@ -19,72 +19,95 @@ export default function AdminDashboard() {
   const { data: recentOrders, isLoading: ordersLoading } = useQuery({
     queryKey: ['recent-orders'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*, order_items(*, menu_items(*))')
-        .order('created_at', { ascending: false })
-        .limit(5);
-      
-      if (error) throw error;
-      return data;
+      try {
+        const { data, error } = await supabase
+          .from('orders')
+          .select('*, order_items(*, menu_items(*))')
+          .order('created_at', { ascending: false })
+          .limit(5);
+        
+        if (error) throw error;
+        return data || [];
+      } catch (error: any) {
+        console.error('Error fetching orders:', error.message);
+        return [];
+      }
     },
   });
 
   const { data: stats } = useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
-      const { data: orders } = await supabase
-        .from('orders')
-        .select('total_amount');
-      
-      const { count: menuCount } = await supabase
-        .from('menu_items')
-        .select('*', { count: 'exact', head: true });
+      try {
+        const { data: orders } = await supabase
+          .from('orders')
+          .select('total_amount');
+        
+        const { count: menuCount } = await supabase
+          .from('menu_items')
+          .select('*', { count: 'exact', head: true });
 
-      const totalRevenue = orders?.reduce((sum, order) => sum + Number(order.total_amount), 0) || 0;
-      
-      return {
-        totalRevenue,
-        menuCount: menuCount || 0,
-        orderCount: orders?.length || 0,
-      };
+        const totalRevenue = orders?.reduce((sum, order) => sum + Number(order.total_amount), 0) || 0;
+        
+        return {
+          totalRevenue,
+          menuCount: menuCount || 0,
+          orderCount: orders?.length || 0,
+        };
+      } catch (error: any) {
+        console.error('Error fetching stats:', error.message);
+        return {
+          totalRevenue: 0,
+          menuCount: 0,
+          orderCount: 0,
+        };
+      }
     },
   });
 
   const { data: orderTrends } = useQuery({
     queryKey: ['order-trends'],
     queryFn: async () => {
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
-      const { data: orders } = await supabase
-        .from('orders')
-        .select('created_at, total_amount')
-        .gte('created_at', thirtyDaysAgo.toISOString())
-        .order('created_at', { ascending: true });
-
-      // Group orders by date and calculate daily totals
-      const dailyData = orders?.reduce((acc: any[], order) => {
-        const date = format(new Date(order.created_at), 'MMM dd');
-        const existingDate = acc.find(item => item.date === date);
+      try {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         
-        if (existingDate) {
-          existingDate.amount += Number(order.total_amount);
-          existingDate.orders += 1;
-        } else {
-          acc.push({
-            date,
-            amount: Number(order.total_amount),
-            orders: 1
-          });
-        }
-        
-        return acc;
-      }, []) || [];
+        const { data: orders } = await supabase
+          .from('orders')
+          .select('created_at, total_amount')
+          .gte('created_at', thirtyDaysAgo.toISOString())
+          .order('created_at', { ascending: true });
 
-      return dailyData;
+        if (!orders) return [];
+
+        // Group orders by date and calculate daily totals
+        return orders.reduce((acc: any[], order) => {
+          const date = format(new Date(order.created_at), 'MMM dd');
+          const existingDate = acc.find(item => item.date === date);
+          
+          if (existingDate) {
+            existingDate.amount += Number(order.total_amount);
+            existingDate.orders += 1;
+          } else {
+            acc.push({
+              date,
+              amount: Number(order.total_amount),
+              orders: 1
+            });
+          }
+          
+          return acc;
+        }, []);
+      } catch (error: any) {
+        console.error('Error fetching trends:', error.message);
+        return [];
+      }
     },
   });
+
+  if (ordersLoading) {
+    return <div className="flex items-center justify-center p-8">Loading...</div>;
+  }
 
   return (
     <div className="space-y-8">
@@ -127,33 +150,39 @@ export default function AdminDashboard() {
           <CardTitle>Revenue Trends (Last 30 Days)</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] mt-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={orderTrends || []}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="date" 
-                  tick={{ fontSize: 12 }}
-                  interval="preserveStartEnd"
-                />
-                <YAxis 
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(value) => formatPrice(value)}
-                />
-                <Tooltip 
-                  formatter={(value: any) => formatPrice(value)}
-                  labelStyle={{ color: 'black' }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="amount"
-                  stroke="#2563eb"
-                  strokeWidth={2}
-                  dot={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+          {orderTrends && orderTrends.length > 0 ? (
+            <div className="h-[300px] mt-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={orderTrends}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="date" 
+                    tick={{ fontSize: 12 }}
+                    interval="preserveStartEnd"
+                  />
+                  <YAxis 
+                    tick={{ fontSize: 12 }}
+                    tickFormatter={(value) => formatPrice(value)}
+                  />
+                  <Tooltip 
+                    formatter={(value: any) => formatPrice(value)}
+                    labelStyle={{ color: 'black' }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="amount"
+                    stroke="#2563eb"
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+              No data available for the selected period
+            </div>
+          )}
         </CardContent>
       </Card>
 
