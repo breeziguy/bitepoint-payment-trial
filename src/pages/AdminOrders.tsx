@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -25,6 +26,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { formatPrice } from "@/utils/formatPrice";
 
 export default function AdminOrders() {
   const { toast } = useToast();
@@ -42,13 +44,6 @@ export default function AdminOrders() {
       return data;
     },
   });
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN'
-    }).format(price * 1000);
-  };
 
   const updateOrderStatus = async (orderId: string, status: string, type: 'payment' | 'delivery') => {
     try {
