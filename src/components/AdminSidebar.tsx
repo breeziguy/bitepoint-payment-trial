@@ -1,3 +1,4 @@
+
 import { Link, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -41,7 +42,13 @@ export function AdminSidebar() {
     <Sidebar className="w-full md:w-64 shrink-0">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Admin Panel</SidebarGroupLabel>
+          <SidebarGroupLabel>
+            <img 
+              src="/lovable-uploads/85686cc4-c9df-4a8b-8766-0b5dd3075e7e.png" 
+              alt="Bitepoint"
+              className="h-6 w-auto"
+            />
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
