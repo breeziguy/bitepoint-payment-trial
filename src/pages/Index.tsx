@@ -1,3 +1,4 @@
+
 import { useState, useContext } from "react";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart } from "lucide-react";
@@ -49,7 +50,13 @@ const Index = () => {
         {/* Header */}
         <header className="bg-white shadow-sm sticky top-0 z-50">
           <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-            <h1 className="text-xl font-bold">{storeSettings?.store_name || 'Food Frenzy'}</h1>
+            <div className="flex items-center">
+              <img 
+                src="/lovable-uploads/0ab08b81-251b-4758-b13d-cd48ed57e5e8.png" 
+                alt="Food Frenzy"
+                className="h-8 w-auto"
+              />
+            </div>
             <div className="flex items-center gap-4">
               {import.meta.env.DEV && (
                 <Button variant="outline" asChild>
