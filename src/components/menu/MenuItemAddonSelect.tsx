@@ -46,32 +46,42 @@ const MenuItemAddonSelect = ({ addons, selectedAddons, onAddonChange }: MenuItem
   };
 
   return (
-    <div className="space-y-2">
-      <Label>Available Addons</Label>
-      <div className="space-y-4 border rounded-md p-4">
+    <div className="space-y-4">
+      <Label className="text-lg font-semibold">Available Addons</Label>
+      <div className="space-y-6 bg-gray-50 rounded-lg p-6">
         {Object.entries(groupedAddons).map(([category, categoryAddons]) => (
-          <div key={category} className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium">{getCategoryLabel(category)}</Label>
+          <div key={category} className="bg-white rounded-md shadow-sm p-4">
+            <div className="flex items-center justify-between mb-4 border-b pb-3">
+              <Label className="text-base font-medium text-gray-800">
+                {getCategoryLabel(category)}
+              </Label>
               <Button
                 variant="outline"
                 size="sm"
+                className="hover:bg-gray-100"
                 onClick={() => handleSelectAllInCategory(category, !isCategoryFullySelected(category))}
               >
                 {isCategoryFullySelected(category) ? 'Deselect All' : 'Select All'}
               </Button>
             </div>
-            <div className="grid grid-cols-2 gap-2 pl-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {categoryAddons.map((addon) => (
-                <div key={addon.id} className="flex items-center space-x-2">
+                <div 
+                  key={addon.id} 
+                  className="flex items-center space-x-3 bg-gray-50 rounded-md p-3 hover:bg-gray-100 transition-colors"
+                >
                   <Checkbox
                     id={`addon-${addon.id}`}
                     checked={selectedAddons.includes(addon.id)}
                     onCheckedChange={(checked) => {
                       onAddonChange(addon.id, checked as boolean);
                     }}
+                    className="h-5 w-5"
                   />
-                  <Label htmlFor={`addon-${addon.id}`} className="text-sm">
+                  <Label 
+                    htmlFor={`addon-${addon.id}`} 
+                    className="text-sm text-gray-700 cursor-pointer"
+                  >
                     {addon.name} - ₦{addon.price}
                   </Label>
                 </div>
@@ -88,3 +98,4 @@ const MenuItemAddonSelect = ({ addons, selectedAddons, onAddonChange }: MenuItem
 };
 
 export default MenuItemAddonSelect;
+
