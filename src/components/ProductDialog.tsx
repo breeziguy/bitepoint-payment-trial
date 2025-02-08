@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { X, Plus, Minus } from "lucide-react";
@@ -13,6 +14,13 @@ interface ProductDialogProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+const ADDON_CATEGORIES = [
+  { value: 'protein', label: 'Protein Options' },
+  { value: 'drinks', label: 'Drinks' },
+  { value: 'extras', label: 'Extra Toppings' },
+  { value: 'packs', label: 'Food Packs' },
+];
 
 const ProductDialog = ({ product, isOpen, onClose }: ProductDialogProps) => {
   const [quantity, setQuantity] = useState(1);
@@ -39,6 +47,16 @@ const ProductDialog = ({ product, isOpen, onClose }: ProductDialogProps) => {
         .in('id', addonIds);
 
       if (addonItemsError) throw addonItemsError;
+
+      // Pre-select required addons
+      const requiredAddons = (addonItems || []).filter(addon => addon.is_required);
+      if (requiredAddons.length > 0) {
+        setSelectedAddons(prev => [
+          ...prev,
+          ...requiredAddons.map(addon => addon.id)
+        ]);
+      }
+
       return addonItems || [];
     },
     enabled: isOpen && !!product.id,
@@ -58,12 +76,21 @@ const ProductDialog = ({ product, isOpen, onClose }: ProductDialogProps) => {
     if (addons) {
       addons.forEach(addon => {
         if (selectedAddons.includes(addon.id)) {
-          total += addon.price * quantity; // Multiply addon price by quantity
+          total += addon.price * quantity;
         }
       });
     }
     return total;
   };
+
+  const groupedAddons = addons?.reduce((acc, addon) => {
+    const category = addon.addon_category || 'others';
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(addon);
+    return acc;
+  }, {} as Record<string, typeof addons>);
 
   const handleAdd = () => {
     const selectedAddonItems = addons?.filter(addon => 
@@ -88,6 +115,10 @@ const ProductDialog = ({ product, isOpen, onClose }: ProductDialogProps) => {
     onClose();
     setQuantity(1);
     setSelectedAddons([]);
+  };
+
+  const getCategoryLabel = (category: string) => {
+    return ADDON_CATEGORIES.find(cat => cat.value === category)?.label || 'Other Options';
   };
 
   return (
@@ -119,30 +150,45 @@ const ProductDialog = ({ product, isOpen, onClose }: ProductDialogProps) => {
             <p className="text-gray-600">{product.description}</p>
           )}
 
-          {addons && addons.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="font-semibold">Available Add-ons</h3>
-              <div className="space-y-2">
-                {addons.map((addon) => (
-                  <div key={addon.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`addon-${addon.id}`}
-                        checked={selectedAddons.includes(addon.id)}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setSelectedAddons([...selectedAddons, addon.id]);
-                          } else {
-                            setSelectedAddons(selectedAddons.filter(id => id !== addon.id));
-                          }
-                        }}
-                      />
-                      <Label htmlFor={`addon-${addon.id}`}>{addon.name}</Label>
-                    </div>
-                    <span className="text-[#FF9F1C]">{formatPrice(addon.price)}</span>
+          {groupedAddons && Object.entries(groupedAddons).length > 0 && (
+            <div className="space-y-6">
+              {Object.entries(groupedAddons).map(([category, categoryAddons]) => (
+                <div key={category} className="space-y-4">
+                  <h3 className="font-semibold">{getCategoryLabel(category)}</h3>
+                  <div className="space-y-2">
+                    {categoryAddons.map((addon) => (
+                      <div key={addon.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`addon-${addon.id}`}
+                            checked={selectedAddons.includes(addon.id)}
+                            onCheckedChange={(checked) => {
+                              if (addon.is_required) return; // Prevent unchecking required addons
+                              if (checked) {
+                                setSelectedAddons([...selectedAddons, addon.id]);
+                              } else {
+                                setSelectedAddons(selectedAddons.filter(id => id !== addon.id));
+                              }
+                            }}
+                            disabled={addon.is_required}
+                          />
+                          <div>
+                            <Label htmlFor={`addon-${addon.id}`} className="flex items-center space-x-2">
+                              {addon.name}
+                              {addon.is_required && (
+                                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded ml-2">
+                                  Required
+                                </span>
+                              )}
+                            </Label>
+                          </div>
+                        </div>
+                        <span className="text-[#FF9F1C]">{formatPrice(addon.price)}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           )}
 

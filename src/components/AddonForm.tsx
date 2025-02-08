@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,18 +8,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { X, Trash2 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
-interface AddonFormProps {
-  onClose: () => void;
-  onSuccess: () => void;
-}
+const ADDON_CATEGORIES = [
+  { value: 'protein', label: 'Protein Options' },
+  { value: 'drinks', label: 'Drinks' },
+  { value: 'extras', label: 'Extra Toppings' },
+  { value: 'packs', label: 'Food Packs' },
+];
 
-const AddonForm = ({ onClose, onSuccess }: AddonFormProps) => {
+const AddonForm = ({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void; }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
-  const [name, setName] = useState("");
-  const [price, setPrice] = useState("");
+  const [name, setName] = useState('');
+  const [price, setPrice] = useState('');
+  const [category, setCategory] = useState('');
+  const [isRequired, setIsRequired] = useState(false);
 
   const { data: addons, isLoading } = useQuery({
     queryKey: ['addons'],
@@ -45,6 +52,8 @@ const AddonForm = ({ onClose, onSuccess }: AddonFormProps) => {
           name, 
           price: Number(price),
           category: 'addon',
+          addon_category: category,
+          is_required: isRequired,
           is_available: true
         }]);
 
@@ -53,6 +62,8 @@ const AddonForm = ({ onClose, onSuccess }: AddonFormProps) => {
       toast({ title: "Addon created successfully" });
       setName("");
       setPrice("");
+      setCategory("");
+      setIsRequired(false);
       queryClient.invalidateQueries({ queryKey: ['addons'] });
       onSuccess();
     } catch (error: any) {
@@ -89,7 +100,14 @@ const AddonForm = ({ onClose, onSuccess }: AddonFormProps) => {
   };
 
   const formatPrice = (price: number) => {
-    return `₦${price.toLocaleString('en-NG')}`;
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN'
+    }).format(price);
+  };
+
+  const getAddonCategoryLabel = (categoryValue: string) => {
+    return ADDON_CATEGORIES.find(cat => cat.value === categoryValue)?.label || categoryValue;
   };
 
   return (
@@ -118,6 +136,22 @@ const AddonForm = ({ onClose, onSuccess }: AddonFormProps) => {
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="category">Category</Label>
+            <Select value={category} onValueChange={setCategory} required>
+              <SelectTrigger>
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {ADDON_CATEGORIES.map((cat) => (
+                  <SelectItem key={cat.value} value={cat.value}>
+                    {cat.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="price">Price (₦)</Label>
             <Input
               id="price"
@@ -128,6 +162,15 @@ const AddonForm = ({ onClose, onSuccess }: AddonFormProps) => {
               onChange={(e) => setPrice(e.target.value)}
               required
             />
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="required"
+              checked={isRequired}
+              onCheckedChange={setIsRequired}
+            />
+            <Label htmlFor="required">Required for all items</Label>
           </div>
 
           <div className="flex justify-end space-x-2">
@@ -154,11 +197,23 @@ const AddonForm = ({ onClose, onSuccess }: AddonFormProps) => {
                   key={addon.id}
                   className="flex items-center justify-between p-2 bg-gray-50 rounded"
                 >
-                  <div>
-                    <span className="text-sm font-medium">{addon.name}</span>
-                    <span className="text-sm text-gray-500 ml-2">
-                      {formatPrice(addon.price)}
-                    </span>
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm font-medium">{addon.name}</span>
+                      {addon.is_required && (
+                        <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">
+                          Required
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {addon.addon_category && (
+                        <span>{getAddonCategoryLabel(addon.addon_category)}</span>
+                      )}
+                      <span className="ml-2 text-[#FF9F1C]">
+                        {formatPrice(addon.price)}
+                      </span>
+                    </div>
                   </div>
                   <Button
                     variant="ghost"

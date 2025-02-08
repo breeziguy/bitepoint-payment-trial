@@ -1,3 +1,4 @@
+
 interface MenuItem {
   id: string;
   name: string;
@@ -10,4 +11,6 @@ interface MenuItem {
   created_at: string;
   updated_at: string;
   category_id: string | null;
+  addon_category?: string;
+  is_required?: boolean;
 }
