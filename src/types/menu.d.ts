@@ -11,6 +11,6 @@ interface MenuItem {
   created_at: string;
   updated_at: string;
   category_id: string | null;
-  addon_category?: string | null;
-  is_required?: boolean | null;
+  addon_category: string | null;
+  is_required: boolean | null;
 }

@@ -95,6 +95,7 @@ export type Database = {
       }
       menu_items: {
         Row: {
+          addon_category: string | null
           category: string
           category_id: string | null
           created_at: string
@@ -103,11 +104,13 @@ export type Database = {
           image_url: string | null
           is_available: boolean | null
           is_featured: boolean | null
+          is_required: boolean | null
           name: string
           price: number
           updated_at: string
         }
         Insert: {
+          addon_category?: string | null
           category: string
           category_id?: string | null
           created_at?: string
@@ -116,11 +119,13 @@ export type Database = {
           image_url?: string | null
           is_available?: boolean | null
           is_featured?: boolean | null
+          is_required?: boolean | null
           name: string
           price: number
           updated_at?: string
         }
         Update: {
+          addon_category?: string | null
           category?: string
           category_id?: string | null
           created_at?: string
@@ -129,6 +134,7 @@ export type Database = {
           image_url?: string | null
           is_available?: boolean | null
           is_featured?: boolean | null
+          is_required?: boolean | null
           name?: string
           price?: number
           updated_at?: string
