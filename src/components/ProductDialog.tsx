@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { X, Plus, Minus } from "lucide-react";
@@ -123,104 +122,106 @@ const ProductDialog = ({ product, isOpen, onClose }: ProductDialogProps) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="relative h-[300px]">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-2 top-2 z-10 bg-white/80 backdrop-blur-sm rounded-full"
-            onClick={onClose}
-          >
-            <X className="h-5 w-5" />
-          </Button>
-          <img 
-            src={product.image_url || '/placeholder.svg'} 
-            alt={product.name}
-            className="w-full h-full object-cover"
-          />
-        </div>
-        
-        <div className="p-6 space-y-6">
-          <div className="flex justify-between items-start">
-            <h2 className="text-2xl font-semibold">{product.name}</h2>
-            <p className="text-2xl text-[#FF9F1C]">{formatPrice(product.price)}</p>
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="grid md:grid-cols-2 gap-0">
+          <div className="relative h-[300px] md:h-full">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-2 z-10 bg-white/80 backdrop-blur-sm rounded-full"
+              onClick={onClose}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+            <img 
+              src={product.image_url || '/placeholder.svg'} 
+              alt={product.name}
+              className="w-full h-full object-cover rounded-t-lg md:rounded-l-lg md:rounded-tr-none"
+            />
           </div>
+          
+          <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-start">
+              <h2 className="text-2xl font-semibold">{product.name}</h2>
+              <p className="text-2xl text-[#FF9F1C]">{formatPrice(product.price)}</p>
+            </div>
 
-          {product.description && (
-            <p className="text-gray-600">{product.description}</p>
-          )}
+            {product.description && (
+              <p className="text-gray-600">{product.description}</p>
+            )}
 
-          {groupedAddons && Object.entries(groupedAddons).length > 0 && (
-            <div className="space-y-6">
-              {Object.entries(groupedAddons).map(([category, categoryAddons]) => (
-                <div key={category} className="space-y-4">
-                  <h3 className="font-semibold">{getCategoryLabel(category)}</h3>
-                  <div className="space-y-2">
-                    {categoryAddons.map((addon) => (
-                      <div key={addon.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`addon-${addon.id}`}
-                            checked={selectedAddons.includes(addon.id)}
-                            onCheckedChange={(checked) => {
-                              if (addon.is_required) return; // Prevent unchecking required addons
-                              if (checked) {
-                                setSelectedAddons([...selectedAddons, addon.id]);
-                              } else {
-                                setSelectedAddons(selectedAddons.filter(id => id !== addon.id));
-                              }
-                            }}
-                            disabled={addon.is_required}
-                          />
-                          <div>
-                            <Label htmlFor={`addon-${addon.id}`} className="flex items-center space-x-2">
-                              {addon.name}
-                              {addon.is_required && (
-                                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded ml-2">
-                                  Required
-                                </span>
-                              )}
-                            </Label>
+            {groupedAddons && Object.entries(groupedAddons).length > 0 && (
+              <div className="space-y-6">
+                {Object.entries(groupedAddons).map(([category, categoryAddons]) => (
+                  <div key={category} className="space-y-4">
+                    <h3 className="font-semibold">{getCategoryLabel(category)}</h3>
+                    <div className="space-y-2">
+                      {categoryAddons.map((addon) => (
+                        <div key={addon.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`addon-${addon.id}`}
+                              checked={selectedAddons.includes(addon.id)}
+                              onCheckedChange={(checked) => {
+                                if (addon.is_required) return;
+                                if (checked) {
+                                  setSelectedAddons([...selectedAddons, addon.id]);
+                                } else {
+                                  setSelectedAddons(selectedAddons.filter(id => id !== addon.id));
+                                }
+                              }}
+                              disabled={addon.is_required}
+                            />
+                            <div>
+                              <Label htmlFor={`addon-${addon.id}`} className="flex items-center space-x-2">
+                                {addon.name}
+                                {addon.is_required && (
+                                  <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded ml-2">
+                                    Required
+                                  </span>
+                                )}
+                              </Label>
+                            </div>
                           </div>
+                          <span className="text-[#FF9F1C]">{formatPrice(addon.price)}</span>
                         </div>
-                        <span className="text-[#FF9F1C]">{formatPrice(addon.price)}</span>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
 
-          <div className="space-y-2">
-            <h3 className="font-medium">Quantity</h3>
-            <div className="flex items-center border rounded-full w-32">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-l-full"
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              >
-                <Minus className="h-4 w-4" />
-              </Button>
-              <div className="flex-1 text-center">{quantity}</div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-r-full"
-                onClick={() => setQuantity(quantity + 1)}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
+            <div className="space-y-2">
+              <h3 className="font-medium">Quantity</h3>
+              <div className="flex items-center border rounded-full w-32">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-l-full"
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <div className="flex-1 text-center">{quantity}</div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-r-full"
+                  onClick={() => setQuantity(quantity + 1)}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
+
+            <Button 
+              className="w-full rounded-full bg-[#075E54] hover:bg-[#075E54]/90 text-white"
+              onClick={handleAdd}
+            >
+              Add {formatPrice(calculateTotal())}
+            </Button>
           </div>
-
-          <Button 
-            className="w-full rounded-full bg-[#075E54] hover:bg-[#075E54]/90 text-white"
-            onClick={handleAdd}
-          >
-            Add {formatPrice(calculateTotal())}
-          </Button>
         </div>
       </div>
     </div>
