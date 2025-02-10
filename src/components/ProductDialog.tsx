@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProductDialogProps {
   product: MenuItem;
@@ -26,6 +27,7 @@ const ProductDialog = ({ product, isOpen, onClose }: ProductDialogProps) => {
   const [quantity, setQuantity] = useState(1);
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
   const { addToCart } = useContext(CartContext);
+  const { toast } = useToast();
 
   const { data: addons } = useQuery({
     queryKey: ['product-addons', product.id],
@@ -40,7 +42,8 @@ const ProductDialog = ({ product, isOpen, onClose }: ProductDialogProps) => {
 
         if (!menuAddons?.length) return [];
 
-        const addonIds = [...new Set(menuAddons.map(item => item.addon_item_id))]; // Remove duplicates
+        // Use Set to ensure unique addon IDs
+        const addonIds = [...new Set(menuAddons.map(item => item.addon_item_id))];
         
         const { data: addonItems, error: addonItemsError } = await supabase
           .from('menu_items')
@@ -49,7 +52,7 @@ const ProductDialog = ({ product, isOpen, onClose }: ProductDialogProps) => {
 
         if (addonItemsError) throw addonItemsError;
 
-        // Pre-select required addons
+        // Pre-select required addons, ensuring no duplicates
         const requiredAddons = (addonItems || []).filter(addon => addon.is_required);
         if (requiredAddons.length > 0) {
           setSelectedAddons(prev => [
@@ -58,8 +61,13 @@ const ProductDialog = ({ product, isOpen, onClose }: ProductDialogProps) => {
         }
 
         return addonItems || [];
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching addons:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load product addons",
+          variant: "destructive",
+        });
         return [];
       }
     },
