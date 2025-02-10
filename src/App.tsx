@@ -1,3 +1,4 @@
+
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import AdminLayout from "./pages/AdminLayout";
@@ -5,6 +6,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminMenu from "./pages/AdminMenu";
 import AdminOrders from "./pages/AdminOrders";
 import AdminSettings from "./pages/AdminSettings";
+import AdminPOS from "./pages/AdminPOS";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import TrackOrder from "./pages/TrackOrder";
@@ -100,6 +102,10 @@ const router = createBrowserRouter([
       {
         path: "settings",
         element: <AdminSettings />,
+      },
+      {
+        path: "pos",
+        element: <AdminPOS />,
       },
     ],
   },

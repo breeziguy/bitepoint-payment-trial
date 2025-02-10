@@ -1,3 +1,4 @@
+
 import { Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,7 +43,7 @@ const MenuSection = ({ onAddToCart, category, featured }: MenuSectionProps) => {
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
+      <div className={featured ? "grid grid-cols-1 md:grid-cols-2 gap-4" : "space-y-4"}>
         {[1, 2, 3].map((i) => (
           <div key={i} className="flex items-start space-x-4 p-4 bg-white rounded-lg">
             <Skeleton className="w-24 h-24 rounded-lg" />
@@ -62,7 +63,7 @@ const MenuSection = ({ onAddToCart, category, featured }: MenuSectionProps) => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className={featured ? "grid grid-cols-1 md:grid-cols-2 gap-4" : "space-y-4"}>
       {menuItems?.map((item) => (
         <div 
           key={item.id} 
