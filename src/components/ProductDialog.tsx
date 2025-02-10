@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { X, Plus, Minus } from "lucide-react";
@@ -29,34 +30,38 @@ const ProductDialog = ({ product, isOpen, onClose }: ProductDialogProps) => {
   const { data: addons } = useQuery({
     queryKey: ['product-addons', product.id],
     queryFn: async () => {
-      const { data: menuAddons, error: menuAddonsError } = await supabase
-        .from('menu_addons')
-        .select('addon_item_id')
-        .eq('menu_item_id', product.id);
+      try {
+        const { data: menuAddons, error: menuAddonsError } = await supabase
+          .from('menu_addons')
+          .select('addon_item_id')
+          .eq('menu_item_id', product.id);
 
-      if (menuAddonsError) throw menuAddonsError;
+        if (menuAddonsError) throw menuAddonsError;
 
-      if (!menuAddons?.length) return [];
+        if (!menuAddons?.length) return [];
 
-      const addonIds = menuAddons.map(item => item.addon_item_id);
-      
-      const { data: addonItems, error: addonItemsError } = await supabase
-        .from('menu_items')
-        .select('*')
-        .in('id', addonIds);
+        const addonIds = [...new Set(menuAddons.map(item => item.addon_item_id))]; // Remove duplicates
+        
+        const { data: addonItems, error: addonItemsError } = await supabase
+          .from('menu_items')
+          .select('*')
+          .in('id', addonIds);
 
-      if (addonItemsError) throw addonItemsError;
+        if (addonItemsError) throw addonItemsError;
 
-      // Pre-select required addons
-      const requiredAddons = (addonItems || []).filter(addon => addon.is_required);
-      if (requiredAddons.length > 0) {
-        setSelectedAddons(prev => [
-          ...prev,
-          ...requiredAddons.map(addon => addon.id)
-        ]);
+        // Pre-select required addons
+        const requiredAddons = (addonItems || []).filter(addon => addon.is_required);
+        if (requiredAddons.length > 0) {
+          setSelectedAddons(prev => [
+            ...new Set([...prev, ...requiredAddons.map(addon => addon.id)])
+          ]);
+        }
+
+        return addonItems || [];
+      } catch (error) {
+        console.error('Error fetching addons:', error);
+        return [];
       }
-
-      return addonItems || [];
     },
     enabled: isOpen && !!product.id,
   });
@@ -165,9 +170,9 @@ const ProductDialog = ({ product, isOpen, onClose }: ProductDialogProps) => {
                               onCheckedChange={(checked) => {
                                 if (addon.is_required) return;
                                 if (checked) {
-                                  setSelectedAddons([...selectedAddons, addon.id]);
+                                  setSelectedAddons(prev => [...new Set([...prev, addon.id])]);
                                 } else {
-                                  setSelectedAddons(selectedAddons.filter(id => id !== addon.id));
+                                  setSelectedAddons(prev => prev.filter(id => id !== addon.id));
                                 }
                               }}
                               disabled={addon.is_required}
