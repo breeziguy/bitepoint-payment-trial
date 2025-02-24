@@ -7,6 +7,7 @@ import BillingSettings from "@/components/admin/BillingSettings";
 import StoreSettingsTab from "@/components/admin/settings/StoreSettingsTab";
 import DeliverySettingsTab from "@/components/admin/settings/DeliverySettingsTab";
 import BrandingSettingsTab from "@/components/admin/settings/BrandingSettingsTab";
+import SplashScreenSettingsTab from "@/components/admin/settings/SplashScreenSettingsTab";
 import { useSearchParams } from "react-router-dom";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
@@ -58,7 +59,6 @@ export default function AdminSettings() {
   });
 
   useEffect(() => {
-    // Check if we have a tab to open from the navigation state
     if (location.state?.tab) {
       setSearchParams({ tab: location.state.tab });
     }
@@ -73,6 +73,7 @@ export default function AdminSettings() {
           <TabsTrigger value="store">Store Settings</TabsTrigger>
           <TabsTrigger value="delivery">Delivery Settings</TabsTrigger>
           <TabsTrigger value="branding">Branding</TabsTrigger>
+          <TabsTrigger value="splash">Splash Screen</TabsTrigger>
           <TabsTrigger value="contact">Contact</TabsTrigger>
           <TabsTrigger value="billing">Billing</TabsTrigger>
         </TabsList>
@@ -100,6 +101,17 @@ export default function AdminSettings() {
             </div>
           ) : (
             <BrandingSettingsTab storeSettings={storeSettings} />
+          )}
+        </TabsContent>
+
+        <TabsContent value="splash">
+          {settingsLoading ? (
+            <div className="space-y-4">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+          ) : (
+            <SplashScreenSettingsTab />
           )}
         </TabsContent>
 
