@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,17 +43,24 @@ export default function AdminMenu() {
   });
 
   const handleDelete = async () => {
+    if (!deleteItem) return;
+
     try {
       const { error } = await supabase
         .from('menu_items')
         .delete()
-        .eq('id', deleteItem?.id);
+        .eq('id', deleteItem.id);
 
       if (error) throw error;
 
-      toast({ title: "Menu item deleted successfully" });
+      toast({ 
+        title: "Success",
+        description: "Menu item deleted successfully" 
+      });
+      
+      // Refresh the menu items list
       queryClient.invalidateQueries({ queryKey: ['menu-items'] });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting menu item:", error);
       toast({
         title: "Error",
