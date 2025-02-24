@@ -281,6 +281,8 @@ export type Database = {
           hero_title: string | null
           id: string
           primary_color: string | null
+          splash_background_color: string | null
+          splash_logo_url: string | null
           store_address: string
           store_city: string
           store_name: string
@@ -295,6 +297,8 @@ export type Database = {
           hero_title?: string | null
           id?: string
           primary_color?: string | null
+          splash_background_color?: string | null
+          splash_logo_url?: string | null
           store_address: string
           store_city: string
           store_name?: string
@@ -309,6 +313,8 @@ export type Database = {
           hero_title?: string | null
           id?: string
           primary_color?: string | null
+          splash_background_color?: string | null
+          splash_logo_url?: string | null
           store_address?: string
           store_city?: string
           store_name?: string
