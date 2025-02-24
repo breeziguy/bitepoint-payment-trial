@@ -6,20 +6,30 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import { Search, Calendar, Clock, PowerCircle, Pencil } from "lucide-react";
+import { Search, Calendar, Clock, PowerCircle, Pencil, Plus, Minus, X } from "lucide-react";
 import { format } from "date-fns";
+import ItemAddonDialog from "@/components/pos/ItemAddonDialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface POSItem extends MenuItem {
   quantity: number;
+  notes?: string;
+  addons?: MenuItem[];
 }
+
+type PaymentMethod = 'cash' | 'transfer' | 'card';
 
 export default function AdminPOS() {
   const [cart, setCart] = useState<POSItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [customerName, setCustomerName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedTable, setSelectedTable] = useState("");
   const [orderType, setOrderType] = useState("");
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [showPaymentMethods, setShowPaymentMethods] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>();
+  const [deliveryAddress, setDeliveryAddress] = useState("");
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
@@ -57,8 +67,22 @@ export default function AdminPOS() {
     },
   });
 
+  const handleAddToCart = (
+    item: MenuItem,
+    quantity: number,
+    notes: string,
+    addons: MenuItem[] = []
+  ) => {
+    setCart(prev => [...prev, { ...item, quantity, notes, addons }]);
+  };
+
+  const calculateItemTotal = (item: POSItem) => {
+    const addonsTotal = item.addons?.reduce((sum, addon) => sum + addon.price, 0) || 0;
+    return (item.price + addonsTotal) * item.quantity;
+  };
+
   const calculateSubtotal = () => {
-    return cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    return cart.reduce((sum, item) => sum + calculateItemTotal(item), 0);
   };
 
   const calculateTax = () => {
@@ -134,19 +158,7 @@ export default function AdminPOS() {
               <Card
                 key={item.id}
                 className="p-4 cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => {
-                  setCart(prev => {
-                    const existingItem = prev.find(i => i.id === item.id);
-                    if (existingItem) {
-                      return prev.map(i => 
-                        i.id === item.id 
-                          ? { ...i, quantity: i.quantity + 1 }
-                          : i
-                      );
-                    }
-                    return [...prev, { ...item, quantity: 1 }];
-                  });
-                }}
+                onClick={() => setSelectedItem(item)}
               >
                 <div className="aspect-square mb-2">
                   <img
@@ -169,25 +181,34 @@ export default function AdminPOS() {
         <div className="col-span-4 bg-white rounded-lg p-4 flex flex-col">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h2 className="text-xl font-semibold">Customer's Name</h2>
-              <p className="text-sm text-gray-500">Order Number: #001</p>
+              {isEditingName ? (
+                <Input
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  onBlur={() => setIsEditingName(false)}
+                  autoFocus
+                  placeholder="Enter customer name"
+                />
+              ) : (
+                <>
+                  <h2 className="text-xl font-semibold">
+                    {customerName || "Customer's Name"}
+                  </h2>
+                  <p className="text-sm text-gray-500">Order Number: #001</p>
+                </>
+              )}
             </div>
-            <Pencil className="text-gray-500 cursor-pointer" />
+            <Pencil 
+              className="text-gray-500 cursor-pointer" 
+              onClick={() => setIsEditingName(true)}
+            />
           </div>
 
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <Select value={selectedTable} onValueChange={setSelectedTable}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Table" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">Table 1</SelectItem>
-                <SelectItem value="2">Table 2</SelectItem>
-                <SelectItem value="3">Table 3</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={orderType} onValueChange={setOrderType}>
+          <div className="mb-4">
+            <Select value={orderType} onValueChange={(value) => {
+              setOrderType(value);
+              setDeliveryAddress("");
+            }}>
               <SelectTrigger>
                 <SelectValue placeholder="Order Type" />
               </SelectTrigger>
@@ -197,6 +218,15 @@ export default function AdminPOS() {
                 <SelectItem value="delivery">Delivery</SelectItem>
               </SelectContent>
             </Select>
+
+            {orderType === 'delivery' && (
+              <Input
+                className="mt-2"
+                placeholder="Delivery Address"
+                value={deliveryAddress}
+                onChange={(e) => setDeliveryAddress(e.target.value)}
+              />
+            )}
           </div>
 
           <div className="flex-1 overflow-auto">
@@ -205,14 +235,33 @@ export default function AdminPOS() {
                 No Item Selected
               </div>
             ) : (
-              cart.map((item) => (
-                <div key={item.id} className="flex justify-between items-center py-2 border-b">
-                  <div>
-                    <h3 className="font-medium">{item.name}</h3>
+              cart.map((item, index) => (
+                <div key={index} className="flex justify-between items-start py-2 border-b">
+                  <div className="flex-1">
+                    <div className="flex justify-between">
+                      <h3 className="font-medium">{item.name}</h3>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => setCart(prev => prev.filter((_, i) => i !== index))}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
                     <p className="text-sm text-gray-600">₦{item.price.toLocaleString()}</p>
+                    {item.addons && item.addons.length > 0 && (
+                      <div className="ml-4 text-sm text-gray-500">
+                        {item.addons.map((addon, i) => (
+                          <div key={i}>+ {addon.name} (₦{addon.price.toLocaleString()})</div>
+                        ))}
+                      </div>
+                    )}
+                    {item.notes && (
+                      <p className="text-xs text-gray-500 mt-1">Note: {item.notes}</p>
+                    )}
                   </div>
-                  <div className="text-right">
-                    <div className="font-medium">₦{(item.price * item.quantity).toLocaleString()}</div>
+                  <div className="text-right ml-4">
+                    <div className="font-medium">₦{calculateItemTotal(item).toLocaleString()}</div>
                     <div className="text-sm text-gray-500">x{item.quantity}</div>
                   </div>
                 </div>
@@ -234,9 +283,15 @@ export default function AdminPOS() {
               <span>₦{calculateTotal().toLocaleString()}</span>
             </div>
 
-            <div className="relative mt-4">
-              <Button variant="outline" className="w-full mb-2">
-                Payment Method
+            <div className="grid gap-2 mt-4">
+              <Button variant="outline" className="w-full" onClick={() => setShowPaymentMethods(true)}>
+                {selectedPaymentMethod ? `Pay with ${selectedPaymentMethod}` : 'Select Payment Method'}
+              </Button>
+              <Button variant="outline" className="w-full">
+                Save Order
+              </Button>
+              <Button variant="outline" className="w-full">
+                Close Order
               </Button>
               <Button className="w-full" size="lg">
                 Place Order
@@ -245,6 +300,55 @@ export default function AdminPOS() {
           </div>
         </div>
       </div>
+
+      {selectedItem && (
+        <ItemAddonDialog
+          item={selectedItem}
+          isOpen={!!selectedItem}
+          onClose={() => setSelectedItem(null)}
+          onAdd={handleAddToCart}
+        />
+      )}
+
+      <Dialog open={showPaymentMethods} onOpenChange={setShowPaymentMethods}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Select Payment Method</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4">
+            <Button
+              variant={selectedPaymentMethod === 'cash' ? 'default' : 'outline'}
+              className="h-24"
+              onClick={() => {
+                setSelectedPaymentMethod('cash');
+                setShowPaymentMethods(false);
+              }}
+            >
+              Cash
+            </Button>
+            <Button
+              variant={selectedPaymentMethod === 'transfer' ? 'default' : 'outline'}
+              className="h-24"
+              onClick={() => {
+                setSelectedPaymentMethod('transfer');
+                setShowPaymentMethods(false);
+              }}
+            >
+              Bank Transfer
+            </Button>
+            <Button
+              variant={selectedPaymentMethod === 'card' ? 'default' : 'outline'}
+              className="h-24"
+              onClick={() => {
+                setSelectedPaymentMethod('card');
+                setShowPaymentMethods(false);
+              }}
+            >
+              Card Payment
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
