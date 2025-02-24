@@ -8,6 +8,12 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
 
+interface StoreSettings {
+  id: string;
+  splash_logo_url?: string;
+  splash_background_color?: string;
+}
+
 export default function SplashScreenSettingsTab() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -21,12 +27,12 @@ export default function SplashScreenSettingsTab() {
         .select('*')
         .single();
       if (error) throw error;
-      return data;
+      return data as StoreSettings;
     },
   });
 
   const updateSettings = useMutation({
-    mutationFn: async (values: any) => {
+    mutationFn: async (values: Partial<StoreSettings>) => {
       const { error } = await supabase
         .from('store_settings')
         .update(values)
