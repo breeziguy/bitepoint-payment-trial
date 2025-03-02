@@ -1,3 +1,4 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0'
 import { corsHeaders } from '../_shared/cors.ts'
 
@@ -29,8 +30,9 @@ Deno.serve(async (req) => {
 
     console.log('Found plan:', plan)
 
-    // The amount is already in Naira, convert to kobo for Paystack
-    const amountInKobo = Math.round(amount * 100)
+    // The amount is already in kobo for Paystack, no need for conversion
+    // Just ensure it's an integer
+    const amountInKobo = Math.round(amount)
 
     const response = await fetch('https://api.paystack.co/transaction/initialize', {
       method: 'POST',

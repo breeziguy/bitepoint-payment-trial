@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -101,10 +102,12 @@ export default function BillingSettings() {
         return;
       }
 
+      // The fix: Send the actual amount in kobo to Paystack without dividing by 100
+      // The plan.price is already in kobo (smallest currency unit) from the database
       const response = await supabase.functions.invoke('paystack', {
         body: {
           plan_id: plan.id,
-          amount: plan.price / 100, // Convert from kobo to Naira for display
+          amount: plan.price, // Don't convert, keep as kobo
         },
       });
 
