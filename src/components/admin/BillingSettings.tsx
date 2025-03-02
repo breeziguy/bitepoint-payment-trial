@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,11 +5,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle, Check } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
+import { formatPrice } from "@/utils/formatPrice";
 
 interface SubscriptionPlan {
   id: string;
@@ -102,12 +101,10 @@ export default function BillingSettings() {
         return;
       }
 
-      // The fix: Send the actual amount in kobo to Paystack without dividing by 100
-      // The plan.price is already in kobo (smallest currency unit) from the database
       const response = await supabase.functions.invoke('paystack', {
         body: {
           plan_id: plan.id,
-          amount: plan.price, // Don't convert, keep as kobo
+          amount: plan.price,
         },
       });
 
@@ -197,7 +194,7 @@ export default function BillingSettings() {
               <CardTitle>{plan.name}</CardTitle>
               <CardDescription>{plan.description}</CardDescription>
               <div className="mt-4">
-                <div className="text-3xl font-bold">₦{(plan.price / 100).toLocaleString()}</div>
+                <div className="text-3xl font-bold">{formatPrice(plan.price)}</div>
                 <div className="text-sm text-muted-foreground">per month</div>
               </div>
             </CardHeader>
