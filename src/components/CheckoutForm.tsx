@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -157,7 +158,7 @@ const CheckoutForm = ({
         className="w-full bg-[#FEF7CD] hover:bg-[#FEF7CD]/90 text-black"
         onClick={onSubmit}
       >
-        Make Payment
+        Proceed to Payment
       </Button>
     </div>
   );
