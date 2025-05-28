@@ -1,9 +1,15 @@
 
+import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import router from './App';
 import './index.css';
+
+// Ensure React is available globally for libraries that need it
+if (typeof window !== 'undefined') {
+  (window as any).React = React;
+}
 
 // Register service worker for PWA
 if ('serviceWorker' in navigator) {

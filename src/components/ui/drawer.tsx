@@ -1,7 +1,12 @@
+
 import * as React from "react"
 import { Drawer as DrawerPrimitive } from "vaul"
-
 import { cn } from "@/lib/utils"
+
+// Ensure React is properly available in the global scope for vaul
+if (typeof window !== 'undefined' && !window.React) {
+  (window as any).React = React;
+}
 
 const Drawer = ({
   shouldScaleBackground = true,
