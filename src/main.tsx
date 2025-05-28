@@ -1,11 +1,5 @@
 
 import React from 'react';
-
-// Ensure React is available globally IMMEDIATELY for libraries that need it
-if (typeof window !== 'undefined') {
-  (window as any).React = React;
-}
-
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
